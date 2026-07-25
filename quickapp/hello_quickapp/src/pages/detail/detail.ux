@@ -1,0 +1,282 @@
+<script>
+  /**
+   * Xsport Detail 体测记录详情查看页
+   * 展示单条体测记录的完整信息
+   */
+  import { TEST_TYPES, GRADE_LEVELS } from '../../common/constants'
+
+  export default {
+    data: {
+      record: null,
+      testLabel: '',
+      testUnit: '',
+      displayValue: '',
+      displayDate: '',
+      avgHr: 0,
+      maxHr: 0,
+      grade: null,
+      studentId: '',
+      deviceId: ''
+    },
+
+    onInit() {
+      // 从路由参数获取记录数据
+      const params = this.$app.$def.router.getParams()
+      if (params && params.record) {
+        try {
+          const record = JSON.parse(params.record)
+          this.showRecord(record)
+        } catch (e) {
+          console.error('[Xsport] 解析详情数据失败:', e)
+        }
+      }
+    },
+
+    showRecord(record) {
+      this.record = record
+
+      const found = TEST_TYPES.find((t) => t.id === record.test_type)
+      this.testLabel = found ? found.label : record.test_type
+      this.testUnit = found ? found.unit : ''
+
+      // 显示值
+      const mode = found ? found.mode : ''
+      if (mode === 'count') {
+        this.displayValue = `${record.count || 0}`
+      } else if (mode === 'time') {
+        const sec = record.time_sec || 0
+        const m = Math.floor(sec / 60)
+        const s = sec % 60
+        this.displayValue = `${m}'${String(s).padStart(2, '0')}"`
+      } else {
+        this.displayValue = `${record.distance_m || 0}`
+      }
+
+      // 日期
+      if (record.test_date) {
+        const d = new Date(record.test_date)
+        this.displayDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+      }
+
+      this.avgHr = record.avg_hr || 0
+      this.maxHr = record.max_hr || 0
+      this.studentId = record.student_id || ''
+      this.deviceId = record.device_id || ''
+
+      // 评分（服务器返回）
+      if (record.grade) {
+        this.grade = record.grade
+      } else if (record.score) {
+        const score = record.score
+        if (score >= 90) this.grade = GRADE_LEVELS.excellent
+        else if (score >= 80) this.grade = GRADE_LEVELS.good
+        else if (score >= 60) this.grade = GRADE_LEVELS.pass
+        else this.grade = GRADE_LEVELS.fail
+      }
+    },
+
+    goBack() {
+      this.$app.$def.router.back()
+    },
+
+    getGradeColor() {
+      return this.grade ? this.grade.color : '#8b949e'
+    },
+
+    getGradeLabel() {
+      return this.grade ? this.grade.label : '暂无评分'
+    }
+  }
+</script>
+
+<template>
+  <div class="detail-page">
+    <!-- 顶部导航 -->
+    <div class="header">
+      <div class="header-back" @click="goBack">
+        <text class="back-arrow">‹</text>
+      </div>
+      <text class="header-title">记录详情</text>
+      <div class="header-spacer"></div>
+    </div>
+
+    <!-- 成绩卡片 -->
+    <div class="detail-card">
+      <text class="detail-test">{{testLabel}}</text>
+      <div class="value-wrap">
+        <text class="detail-value">{{displayValue}}</text>
+        <text class="detail-unit">{{testUnit}}</text>
+      </div>
+
+      <!-- 评分 -->
+      <div class="grade-badge" style="background-color: {{getGradeColor()}}20; border-color: {{getGradeColor()}}" show="{{ grade }}">
+        <text class="grade-text" style="color: {{getGradeColor()}}">{{getGradeLabel()}}</text>
+      </div>
+    </div>
+
+    <!-- 详细信息 -->
+    <div class="info-card">
+      <text class="info-title">详细信息</text>
+
+      <div class="info-row">
+        <text class="info-key">测试日期</text>
+        <text class="info-val">{{displayDate}}</text>
+      </div>
+
+      <div class="info-row" show="{{ avgHr > 0 }}">
+        <text class="info-key">平均心率</text>
+        <text class="info-val hr">{{avgHr}} bpm</text>
+      </div>
+
+      <div class="info-row" show="{{ maxHr > 0 }}">
+        <text class="info-key">最高心率</text>
+        <text class="info-val hr">{{maxHr}} bpm</text>
+      </div>
+
+      <div class="info-row" show="{{ studentId }}">
+        <text class="info-key">学号</text>
+        <text class="info-val">{{studentId}}</text>
+      </div>
+
+      <div class="info-row" show="{{ deviceId }}">
+        <text class="info-key">设备</text>
+        <text class="info-val mono">{{deviceId}}</text>
+      </div>
+
+      <div class="info-row" show="{{ record && record.duration_sec }}">
+        <text class="info-key">测试时长</text>
+        <text class="info-val">{{record ? record.duration_sec : ''}} 秒</text>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+  .detail-page {
+    flex: 1;
+    flex-direction: column;
+    background-color: #0d1117;
+  }
+
+  .header {
+    flex-direction: row;
+    align-items: center;
+    padding: 16px 12px;
+  }
+
+  .header-back {
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .back-arrow {
+    font-size: 28px;
+    color: #8b949e;
+  }
+
+  .header-title {
+    flex: 1;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #e6edf3;
+  }
+
+  .header-spacer {
+    width: 36px;
+  }
+
+  .detail-card {
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 16px;
+    margin: 0 12px 12px;
+    background: linear-gradient(135deg, #161b22, #21262d);
+    border-radius: 20px;
+    border: 1px solid #30363d;
+  }
+
+  .detail-test {
+    font-size: 14px;
+    color: #8b949e;
+    margin-bottom: 10px;
+  }
+
+  .value-wrap {
+    flex-direction: row;
+    align-items: baseline;
+    margin-bottom: 14px;
+  }
+
+  .detail-value {
+    font-size: 52px;
+    font-weight: 300;
+    color: #e6edf3;
+    font-family: monospace;
+  }
+
+  .detail-unit {
+    font-size: 16px;
+    color: #8b949e;
+    margin-left: 4px;
+  }
+
+  .grade-badge {
+    padding: 6px 20px;
+    border-radius: 20px;
+    border-width: 1px;
+  }
+
+  .grade-text {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .info-card {
+    flex-direction: column;
+    margin: 0 12px;
+    padding: 16px;
+    background-color: #161b22;
+    border-radius: 14px;
+    border: 1px solid #30363d;
+  }
+
+  .info-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #8b949e;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #30363d;
+  }
+
+  .info-row {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #21262d;
+  }
+
+  .info-key {
+    font-size: 13px;
+    color: #8b949e;
+  }
+
+  .info-val {
+    font-size: 13px;
+    color: #e6edf3;
+    font-weight: 600;
+  }
+
+  .info-val.hr {
+    color: #f85149;
+  }
+
+  .info-val.mono {
+    font-family: monospace;
+    font-size: 11px;
+    color: #484f58;
+  }
+</style>

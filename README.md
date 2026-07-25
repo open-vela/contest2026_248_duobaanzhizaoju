@@ -1,148 +1,207 @@
-# contest2026_248_duobaanzhizaoju
-
-👋 欢迎参加 **2026 首届 openvela AI 硬件开发者大赛**！
-
-这是组委会为你的队伍创建的**专属参赛仓库**（本仓为样例/模板，队伍编号 `248`；你看到的将是你自己的 `contest2026_<编号>_<队伍名>`）。比赛期间，你的全部参赛代码、打包产物与 AI Coding 日志都提交到这里。
-
-> 本仓既是「代码仓」，又内置了一键拉取整套 openvela 工程的 `repo` 清单（manifest）。你只需跟它打交道，**自始至终只动一个文件夹**。
-
----
-
-## 一、先读这些官方文档
-
-**通用（所有赛道必读）：**
-
-| 文档                                                                                                                                     | 用途                                           |
-| ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| [《大赛总览》](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/contest_overview.md)                        | 赛道、流程、评分、资源，建议先通读             |
-| [《参赛代码提交指南》](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/code_submission_guide.md)           | 仓库获取、提交流程、时间与权限（**以此为准**） |
-| [《AI Coding 日志归集与提交手册》](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/ai_coding_log_guide.md) | 如何导出 AI 对话日志并提交到 `logs/`           |
-
-**按你的赛道选读（三选一）：**
-
-| 赛道                  | 教程导航                                                                                                                                                 |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 快应用 / 手表应用创新 | [快应用教程导航](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/quickapp/quickapp_guide_index.md)                         |
-| AI 硬件产品创新       | [AI 硬件赛道教程导航](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/ai_hardware/ai_hardware_guide_index.md)              |
-| 新硬件适配            | [新硬件适配赛道教程导航](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/hardware_porting/hardware_porting_guide_index.md) |
-
----
-
-## 二、第一步：拉取完整工程
-
-用组委会提供的命令一键拉取「openvela 全量源码 + 你的专属仓」：
-
-```bash
-repo init -u https://github.com/open-vela/contest2026_248_duobaanzhizaoju \
-  -b dev-ai-contest-2026 -m contest2026_248_duobaanzhizaoju.xml
-repo sync -c -j8
-```
-
-同步后，你的整个仓库位于工作区的 `contest2026_248_duobaanzhizaoju/`，openvela 全量源码在外层（`nuttx/`、`apps/`、`packages/`、`vendor/` 等）。
-
----
-
-## 三、第二步：在哪里写代码
-
-**只在自己的仓目录 `contest2026_248_duobaanzhizaoju/` 里开发。** 不同作品形态放在对应子目录，manifest 会通过 `<linkfile>` 把它们**软链**到 openvela 编译树该在的位置——你不用手动 copy：
-
-| 作品形态 | 你的代码放这里             | 系统自动映射到                                 |
-| -------- | -------------------------- | ---------------------------------------------- |
-| 应用     | `app/hello_app/`           | `packages/demos/contest2026_248_hello_app`     |
-| 快应用   | `quickapp/hello_quickapp/` | `packages/apps/contest2026_248_hello_quickapp` |
-| 板级适配 | `board/contest_board/`     | `vendor/openvela/boards/contest2026_248_board` |
-
-> 用不到的形态目录可以删掉；新增作品时按同样规则加子目录，并在 `contest2026_248_duobaanzhizaoju.xml` 里补一条 `<linkfile>` 映射即可。**生产仓库（packages/nuttx/vendor 等）零改动。**
-
-建议仓库目录约定（便于评委定位）：
-
-```text
-app/ | quickapp/ | board/   # 你的作品代码
-logs/                       # AI Coding 日志（主动导出后提交，格式见 logs/README.md）
-README.md                   # 作品说明（提交前请改成你自己的，见第六节）
-```
-
-> 仓内附带了一个 `.gitignore.example`，给出了**编译产物**等不需要进仓的文件示例。如需启用，`cp .gitignore.example .gitignore` 后按需增删即可。**注意 `logs/` 下最终导出的 AI Coding 日志必须提交，不要忽略。**
->
-> `logs/` 的目录结构与提交格式见 [logs/README.md](logs/README.md)。
-
----
-
-## 四、第三步：编译与运行
-
-编译/运行步骤随作品形态不同而不同，请参考你所在赛道的教程导航：
-
-- 快应用 / 手表应用：[快应用教程导航](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/quickapp/quickapp_guide_index.md)（含模拟器与开发板部署）。
-- AI 硬件产品创新：[AI 硬件赛道教程导航](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/ai_hardware/ai_hardware_guide_index.md)（环境搭建、编译烧录、Skill 开发）。
-- 新硬件适配：[新硬件适配赛道教程导航](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/hardware_porting/hardware_porting_guide_index.md)（BSP 移植、最小 NSH 基线）。
-
-子目录已通过 manifest 中的 `<linkfile>` 软链进 openvela 编译树，因此构建在 openvela 工作区**根目录**（即你这个仓的上一级）进行。openvela 使用 `build.sh` 作为统一入口，接收一个 **board config 路径**作为参数：
-
-```bash
-# 进入 openvela 工作区根目录（你的仓的上一级）
-cd ..
-
-# 通用语法：第一个参数是 board config 路径，第二个参数可以是 menuconfig / distclean 等
-./build.sh <board-config-path> [menuconfig|distclean] [-j8]
-```
-
-> 具体的 board config 路径、目标产物、模拟器/真机部署方式请以你所在赛道的教程导航为准。本仓 `app/` `quickapp/` `board/` 三个示例骨架对应的 Kconfig 选项可通过 `menuconfig` 启用。
-
----
-
-## 五、第四步：提交作品
-
-1. **fork** 你的专属仓 → 开发 → `git commit` 并推送 → 向专属仓发起 **Pull Request**，可**自行 review 并合入**（无需等组委会）。
-2. **AI Coding 日志**：与 AI 工具的对话会自动记录到本机 staging（不会自动上传），需你**主动导出/打包**选定会话到仓内 `logs/` 目录后一并提交。详见[《AI Coding 日志归集与提交手册》](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/ai_coding_log_guide.md)。
-3. 若需改动 **nuttx 等公共仓库**，不在本仓改，而是 fork 对应公共仓、以 PR 提交到 `dev-ai-contest-2026` 分支，由组委会 review 后合入。
-
-> ⏰ **提交作品截止：9 月 20 日**。截止后统一收回 push 权限，仍可查看 / clone。
->
-> 获奖后再按要求将作品 PR 至 openvela 上游对应仓库（走标准 PR + CI 流程）。
-
-### 关于 PR 与 CLA
-
-- 本仓所有改动通过 **Pull Request** 合入（分支保护强制，可自行合入自己的 PR）。
-- 首次贡献需在[**官网签署 CLA**](https://openvela.com/#/community/cla)；PR 上会自动跑 `cla/signature` 检查，在官网签署成功后，在 PR 评论 `/check-cla` 复检即可通过。
-
----
-
-## 六、提交前：把本 README 改成你的作品说明
-
-本文件目前是组委会给的**使用说明书**。**作品提交前，请把它替换成你自己作品的说明**，方便评委快速了解你做了什么、怎么跑起来。建议至少包含以下内容：
-
-```markdown
-# <你的作品名>
+# Xsport 中学生体测手表快应用
 
 ## 一、作品简介
-<一句话/一段话说明这个作品是什么、解决什么问题、亮点在哪>
 
-## 二、选题方向
-<快应用 / 手表应用创新 ｜ AI 硬件产品创新 ｜ 新硬件适配 ｜ 自定方向，并简述理由>
+Xsport 是一款运行在 OpenVela 智能手表上的体测数据记录快应用，面向中学生体质健康测试场景。学生佩戴手表进行跳绳、跑步、立定跳远等 8 项体测项目时，应用自动计时计数，实时显示心率数据，测试结束后自动评分并将数据通过 WiFi / HTTP 上传至云端服务器。体育老师在 Web 管理后台或 Android APP 上即可查看全班学生的体测成绩、历史趋势和 AI 智能分析报告，彻底告别纸质记录和手工录入。
 
-## 三、目录结构
-<列出你这个仓里各目录/文件的作用，例如：>
-- `app/xxx/`        — <说明>
-- `board/xxx/`      — <说明>
-- `quickapp/xxx/`   — <说明>
-- `logs/`           — AI Coding 日志
-- `docs/` 或其他    — <说明>
+**核心亮点：**
 
-## 四、运行方式
-<拉取工程后，如何编译、烧录/部署、运行的完整步骤；最好能让评委照着一步步复现>
-
-## 五、AI Coding 使用说明
-<说明本作品如何借助 AI 辅助开发：
-- 在需求拆解 / 方案设计 / 编码 / 调试 / 文档等环节如何与 AI 协作；
-- AI 对开发效率或质量带来的实际帮助。
-完整对话日志见 logs/ 目录>
-```
-
-> 提示：将会根据「作品本身 + 你的 README 说明 + `logs/` 里的 AI Coding 日志」来理解和评估你的作品，README 写清楚很重要。
+- **全项目覆盖** — 支持跳绳、50 米跑、800/1000 米跑、立定跳远、仰卧起坐、引体向上、坐位体前屈共 8 项国标体测
+- **离线可用 + 断网补传** — 体测数据优先本地缓存，联网后自动批量推送至服务器，不丢一条记录
+- **AI 智能周报** — 手表端直接查看由大模型生成的中文运动分析报告（基于一周体测数据 + 心率趋势智能生成）
+- **466×466 圆屏完美适配** — 每个页面均针对圆形 AMOLED 屏幕单独设计布局，无裁切、无黑边
+- **实时心率监控** — 调用 OpenVela `service.health` 接口持续采集心率，测试中实时显示并记录最高/平均心率
 
 ---
 
-## 附：仓库命名规范
+## 二、选题方向
 
-`contest2026_<编号>_<队伍名>` — 编号三位零填充；队名 slug（全小写、英文/拼音、连字符）。例：`contest2026_248_duobaanzhizaoju`。
-（仓库由组委会统一创建，**每队仅一个仓**，无需自行命名。）
+**选题：手表应用创新 + AI 硬件产品创新（双方向）**
+
+**选向理由：**
+
+本作品的核心载体是智能手表快应用，属于典型的"手表应用创新"方向。但与普通手表应用不同的是，我们不仅实现了传统运动数据记录功能，还将手表作为学生体测的"智能终端"，打通了"手表数据采集 → 云端 AI 分析 → 三端报告查看"的完整闭环。主要体现在：
+
+1. **手表应用创新** — 针对中学生体质健康测试这一特定垂直场景，将 8 项国标体测全部集成到一块 466×466 圆形屏幕上，每个项目的测试界面都做了专项优化（计数模式/跑步模式/距离模式三种 UI 自适应）
+
+2. **AI 硬件产品创新** — 手表不仅仅是数据采集器，还是 AI 分析结果的呈现端。服务端聚合学生一周体测数据后调用大模型（支持 DeepSeek / 智谱 GLM / 小米 MiMo / 通义千问 / Kimi / OpenAI 六家）生成个性化运动分析报告，学生直接在手表上就能查看 AI 生成的 HTML 格式周报（含体测概览、成绩分析、心率分析、体质评估、运动建议五个章节）
+
+3. **端云协同架构** — 手表端做"轻"（数据采集 + 本地缓存 + UI 展示），云端做"重"（评分引擎 + AI 推理 + 统计分析），分工合理，手表端代码简洁高效
+
+---
+
+## 三、目录结构
+
+```
+xsport/Xsport/
+├── src/
+│   ├── app.ux                        — 快应用入口，全局状态管理（学号/设备ID/服务器地址），启动离线同步和网络监听
+│   ├── manifest.json                 — 快应用配置清单：包名、权限声明（网络/存储/健康/振动）、路由表、屏幕参数
+│   ├── config-watch.json             — 手表端编译配置
+│   │
+│   ├── common/                       — 公共模块层
+│   │   ├── constants.js              — 全局常量：测试项目定义(8项)、评分等级、路由表、运动配色、MQTT 配置等
+│   │   ├── storage.js                — 本地存储模块：封装 @system.storage API，提供 read/write/remove/clear 方法
+│   │   ├── network.js                — 网络请求模块：封装 @system.fetch HTTP 通信，含设备注册、体测上传、AI 报告查询等 12 个 API
+│   │   ├── sync.js                   — 离线同步队列：本地优先缓存，联网自动批量推送，支持断网重试和失败补偿
+│   │   ├── health.js                 — 健康服务模块：封装 @service.health API，持续采集心率和血氧数据
+│   │   ├── mqtt.js                   — MQTT 消息模块：手表通过 TCP/WebSocket 推送实时运动数据到 EMQX Broker
+│   │   └── logo.png                  — 应用图标
+│   │
+│   ├── pages/                        — 页面层（共 11 个页面）
+│   │   ├── index/                    — 启动页：初始化配置后自动跳转首页
+│   │   ├── home/                     — 运动首页：8 项体测入口列表 + AI 报告 + 最近记录 + 设置快捷入口
+│   │   ├── sport/                    — 运动详情页：展示某一体测项目的历史成绩趋势图
+│   │   ├── test/                     — 运动训练页：实时计时/计数/心率/距离/配速，支持计数、跑步、距离三种模式
+│   │   ├── result/                   — 测试结果页：展示成绩得分、等级评级、心率统计、自动上传服务器
+│   │   ├── history/                  — 历史记录页：按日期分组展示过往体测记录，支持点击查看详情
+│   │   ├── detail/                   — 记录详情页：单条体测记录的完整信息（成绩、心率、设备、测试时长）
+│   │   ├── recent/                   — 最近记录页：按时间倒序展示最近 N 次体测记录
+│   │   ├── settings/                 — 设置页：学号绑定、设备 ID 管理、服务器地址配置
+│   │   ├── report/                   — AI 周报列表页：从云端拉取最近 5 份 AI 周报列表
+│   │   └── report_detail/            — AI 周报详情页：展示完整 AI 报告（HTML→纯文本解析，支持上下滑动）
+│   │
+│   └── i18n/                         — 国际化资源
+│       ├── defaults.json
+│       ├── en.json
+│       └── zh-CN.json
+│
+├── build/                            — 编译产物（npm run build 生成）
+├── dist/                             — 发布产物（npm run release 生成）
+├── package.json                      — npm 依赖与脚本：start/build/release/lint
+├── jsconfig.json                     — VS Code 路径别名配置
+└── commitlint.config.js              — Git 提交规范配置
+```
+
+---
+
+## 四、运行方式
+
+### 4.1 环境准备
+
+- **Node.js** ≥ 8.10
+- **npm** 包管理器
+- **OpenVela 模拟器** 或 **OpenVela 真机手表**（需支持快应用运行时）
+- **aiot-toolkit** 快应用编译工具链
+
+### 4.2 拉取工程并安装依赖
+
+```bash
+cd xsport/Xsport
+npm install
+```
+
+### 4.3 编译运行
+
+**方式一：模拟器调试（推荐开发阶段使用）**
+
+```bash
+# 启动开发服务器并监听文件变化自动热更新
+npm start
+
+# 或手动构建后安装到模拟器
+npm run build
+```
+
+使用 OpenVela 模拟器加载 `xsport/Xsport/dist/` 目录下的构建产物即可运行。
+
+**方式二：真机部署**
+
+```bash
+# 构建 release 版本
+npm run release
+```
+
+将生成的 `.rpk` 包通过 OpenVela 开发者工具侧载到手表真机。
+
+### 4.4 首次使用配置
+
+应用启动后会自动进入首页。首次使用需在**设置页**完成以下配置：
+
+1. **学号** — 输入佩戴手表的学生学号（如 `STU20260001`），用于身份标识和数据归属
+2. **设备 ID** — 系统自动生成或手动输入（如 `VELA-WATCH-0001`），用于服务器端设备管理
+3. **服务器地址** — 输入体测数据服务器的 URL（默认 `http://101.35.231.154:9000`）
+
+配置完成后返回首页，选择对应体测项目即可开始测试。
+
+### 4.5 完整使用流程
+
+1. 首页选择体测项目（如跳绳） → 进入运动详情页
+2. 点击"开始测试" → 进入训练页，自动计时/计数，实时显示心率
+3. 测试结束 → 自动跳转结果页，展示成绩和评分
+4. 数据自动缓存本地 + 联网时自动上传服务器
+5. 首页点击"AI 报告" → 查看 AI 生成的周报列表 → 点击查看完整报告
+
+---
+
+## 五、AI Coding 使用说明
+
+### 5.1 整体协作模式
+
+本快应用的开发全程借助 AI（WorkBuddy Senior Developer Agent）辅助完成。采用"人工提需求 → AI 出方案 → 人工审核反馈 → AI 修改迭代"的协作模式，覆盖需求分析、架构设计、编码实现、调试修复、文档撰写全流程。
+
+### 5.2 需求拆解阶段
+
+在项目启动时，将整体需求（"做一个中学生体测手表快应用"）拆解为以下子任务与 AI 逐一沟通：
+
+- **页面路由规划** — 明确 11 个页面的跳转关系（首页 → 运动详情 → 训练页 → 结果页 → 返回首页）
+- **8 项体测项目的测试模式分类** — 计数模式（跳绳/仰卧起坐/引体向上）、跑步模式（50m/800m/1000m）、距离模式（立定跳远/坐位体前屈）
+- **离线同步策略** — 确定"本地优先缓存 → 监听网络 → 批量推送"的方案
+- **AI 周报的呈现方式** — 手表屏幕小、无 WebView，决定将服务端返回的 HTML 报告解析为纯文本段落展示
+
+AI 在此阶段主要负责：梳理需求边界、提出技术方案选项、识别潜在风险点。
+
+### 5.3 方案设计阶段
+
+AI 参与完成了以下设计工作：
+
+- **网络层架构** — 设计 `network.js` 统一封装 `@system.fetch`，解决了快应用原生 fetch API 的 `data` 字段必须为 String 的关键兼容性问题，避免 JSON 对象直接传入导致的请求失败
+- **存储层设计** — 将快应用回调式 `@system.storage` API 封装为 Promise 风格，方便在 async/await 流程中使用
+- **离线同步队列模型** — 设计 `{ _id, _synced, _createdAt, _retries }` 的队列数据结构，支持断网重试和失败补偿
+- **页面传参方案** — 经 AI 两次迭代发现问题：快应用的 `router.push({params})` → `router.getParams()` 在 OpenVela 环境中不生效（项目中 `detail.ux` 也存在同样套路但从未被调用过），最终改用 `storage.set/get` 模式进行跨页面传参，这是项目中已验证可行的方案
+
+### 5.4 编码实现阶段
+
+AI 直接完成了以下模块的代码编写：
+
+- `src/common/constants.js` — 8 项体测的完整配置（项目ID、名称、模式、单位、时长、描述），评分等级，路由表，运动配色方案
+- `src/common/network.js` — 12 个 API 端点封装（设备注册、体测上传、手动录入、历史查询、趋势查询、AI 报告查询等），含完整的请求/响应调试日志
+- `src/common/sync.js` — 离线同步队列的完整实现，含 `saveRecord`、`markSynced`、`syncPending`、`startNetworkMonitor` 等核心方法
+- `src/pages/*/` — 全部 11 个页面的 `.ux` 单文件组件（template + script + style），每个页面针对 466×466 圆屏独立设计布局
+- `src/app.ux` — 应用入口，全局状态管理（学号/设备ID/服务器地址），启动时恢复本地配置并初始化网络模块和同步队列
+
+### 5.5 调试修复阶段
+
+开发过程中遇到的关键问题及 AI 辅助修复过程：
+
+| 问题 | AI 诊断过程 | 解决方案 |
+|------|------------|---------|
+| 网络请求 400 错误 | 分析快应用 `@system.fetch` API 文档，发现 `data` 字段必须为 String | 修改 `request()` 函数，使用 `JSON.stringify()` 序列化 body |
+| 报告详情页永久加载中 | 排查发现 `storage.get` 回调缺少 `fail` 分支，key 不存在时 `success` 不触发 | 为所有 `storage.get` 添加 `fail` 回调和默认值降级逻辑 |
+| 报告详情页内容重叠 | 发现 `.page { height: 466px }` 固定高度限制导致内容溢出后被截断而非滚动 | 改用 `flex: 1` 自适应高度，内容超出后平台自动提供滚动 |
+| 页面参数传递失败 | 对比项目中其他页面发现本项目从未使用过 `router.getParams()` 成功传递数据 | 改用 `storage.set`/`storage.get` 模式传参 |
+| 服务器 API 地址配置 | `storage.get` 无 fail 回调导致使用默认地址时 callback 不触发 | 为所有网络请求增加 `storage.get` 的 fail 回调和显式的默认地址 fallback |
+
+### 5.6 文档撰写阶段
+
+AI 辅助完成了以下文档输出：
+
+- 本说明文档的全文撰写
+- `网络请求模块` 和 `离线同步模块` 的代码内 JSDoc 注释
+- 每个页面的功能说明注释
+
+### 5.7 AI 对开发效率与质量的实际帮助
+
+**效率提升：**
+
+- 11 个页面的 UI 布局（template + style）由 AI 一次性生成，每个页面针对圆屏独立设计，人工只需微调颜色和间距。按每个页面手动开发 30-60 分钟计算，AI 节省了约 6-10 小时的前端开发时间
+- 快应用 API 兼容性问题（如 `@system.fetch` 的 data 必须为 String）由 AI 通过对比 API 文档快速定位，而非依靠反复试错
+- 跨页面参数传递的 bug 由 AI 通过横向对比项目中其他页面的实现模式发现，而非逐页排查
+
+**质量提升：**
+
+- 统一的代码风格：所有页面遵循一致的 template/script/style 单文件组件模式，命名规范统一（`TAG` 日志标签、`_` 前缀私有方法）
+- 完整的错误处理：每个 API 调用都有 `try/catch`、每个 `storage.get` 都有 `success/fail` 双回调、每个网络请求都有 `success/fail` 双分支
+- 详尽的调试日志：`[Xsport-Net]`、`[Storage]`、`[Health]` 等模块级日志标签，便于在生产环境中快速定位问题
+
+**完整对话日志见项目的 AI Coding 日志记录。**

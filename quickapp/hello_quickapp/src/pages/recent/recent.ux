@@ -1,0 +1,144 @@
+<script>
+  /**
+   * Xsport Recent — 最近一周运动记录
+   * 466×466 圆屏适配
+   */
+  var storage = require('@system.storage')
+  var router = require('@system.router')
+
+  var TAG = '[Recent]'
+
+  export default {
+    data: {
+      records: [],
+      batteryPercent: 86
+    },
+
+    onInit() {
+      this._loadRecentRecords()
+    },
+
+    _loadRecentRecords() {
+      var self = this
+      storage.get({
+        key: 'history_records',
+        success: function(data) {
+          if (!data) return
+          try {
+            var all = JSON.parse(data)
+            var now = Date.now()
+            var weekAgo = now - 7 * 24 * 60 * 60 * 1000
+            var recent = []
+            for (var i = 0; i < all.length; i++) {
+              var r = all[i]
+              var ts = r.timestamp ? new Date(r.timestamp).getTime() : 0
+              if (ts >= weekAgo) {
+                recent.push({
+                  sportName: r.sportName || r.sportId || '--',
+                  value: r.value || 0,
+                  unit: r.unit || '',
+                  score: r.score || 0,
+                  dateStr: self._fmtDate(r.timestamp),
+                  heartRate: r.heartRate || 0,
+                  calories: r.calories || 0
+                })
+              }
+            }
+            self.records = recent
+            console.log(TAG, '最近一周记录:', recent.length, '条')
+          } catch(e) { console.error(TAG, e) }
+        }
+      })
+    },
+
+    _fmtDate(ts) {
+      if (!ts) return ''
+      var d = new Date(ts)
+      var m = d.getMonth() + 1
+      var day = d.getDate()
+      var h = String(d.getHours()).padStart(2, '0')
+      var min = String(d.getMinutes()).padStart(2, '0')
+      return m + '/' + day + ' ' + h + ':' + min
+    },
+
+    goBack() {
+      router.back()
+    }
+  }
+</script>
+
+<template>
+  <div class="page">
+    <!-- ① 电池栏 -->
+    <div class="battery-bar">
+      <div class="battery-wrap">
+        <div class="batt-body"><div class="batt-fill" style="width: {{batteryPercent}}%"></div></div>
+        <text class="batt-pct">{{batteryPercent}}%</text>
+      </div>
+    </div>
+
+    <!-- ② 标题行 -->
+    <div class="title-row">
+      <div class="back-btn" @click="goBack"><text class="back-char">&lt;</text></div>
+      <text class="page-title">最近一周</text>
+      <div class="title-spacer"></div>
+    </div>
+
+    <!-- ③ 记录列表 -->
+    <div class="record-list" show="{{records.length > 0}}">
+      <div class="rec-card" for="{{records}}">
+        <div class="rec-top">
+          <text class="rec-name">{{$item.sportName}}</text>
+          <text class="rec-value">{{$item.value}}{{$item.unit}}</text>
+        </div>
+        <div class="rec-bottom">
+          <text class="rec-date">{{$item.dateStr}}</text>
+          <text class="rec-score">评分{{$item.score}}</text>
+          <text class="rec-hr">{{$item.heartRate}}bpm</text>
+          <text class="rec-cal">{{$item.calories}}kcal</text>
+        </div>
+      </div>
+    </div>
+
+    <!-- 空状态 -->
+    <div class="empty-state" show="{{records.length === 0}}">
+      <text class="empty-icon">📭</text>
+      <text class="empty-text">最近一周暂无记录</text>
+    </div>
+  </div>
+</template>
+
+<style>
+  .page { position: absolute; left: 0; top: 0; width: 466px; height: 466px; background-color: #000000; flex-direction: column; align-items: center; }
+
+  /* ① 电池栏 */
+  .battery-bar { position: absolute; top: 8px; left: 63px; width: 340px; height: 18px; flex-direction: row; align-items: center; justify-content: center; }
+  .battery-wrap { width: 44px; height: 16px; flex-direction: row; align-items: center; }
+  .batt-body { width: 18px; height: 9px; border-radius: 2px; background-color: #222222; border-width: 1px; border-color: #555555; }
+  .batt-fill { height: 7px; min-width: 2px; border-radius: 1px; background-color: #00C9A7; }
+  .batt-pct { font-size: 10px; color: #cccccc; margin-left: 3px; }
+
+  /* ② 标题行 */
+  .title-row { position: absolute; top: 32px; left: 63px; width: 340px; height: 24px; flex-direction: row; align-items: center; }
+  .back-btn { width: 22px; height: 22px; border-radius: 11px; background-color: #1a1a1a; justify-content: center; align-items: center; }
+  .back-char { font-size: 11px; color: #888888; }
+  .page-title { flex: 1; text-align: center; font-size: 14px; color: #FF6B35; }
+  .title-spacer { width: 22px; }
+
+  /* ③ 记录列表 */
+  .record-list { position: absolute; top: 64px; left: 43px; width: 380px; flex-direction: column; }
+  .rec-card { width: 380px; flex-direction: column; padding: 6px 10px; margin-bottom: 4px; border-radius: 8px; background-color: #1a1a1a; }
+  .rec-top { flex-direction: row; align-items: center; justify-content: space-between; }
+  .rec-name { font-size: 13px; color: #ffffff; }
+  .rec-value { font-size: 14px; color: #00C9A7; font-weight: bold; }
+  .rec-bottom { flex-direction: row; align-items: center; margin-top: 2px; }
+  .rec-date { font-size: 10px; color: #666666; flex: 1; }
+  .rec-score { font-size: 10px; color: #888888; margin-left: 6px; }
+  .rec-hr { font-size: 10px; color: #888888; margin-left: 6px; }
+  .rec-cal { font-size: 10px; color: #888888; margin-left: 6px; }
+
+  /* 空状态 */
+  .empty-state { position: absolute; top: 180px; left: 0; width: 466px; flex-direction: column; align-items: center; }
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+  .empty-text { font-size: 13px; color: #666666; }
+</style>

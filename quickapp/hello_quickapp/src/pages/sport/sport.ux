@@ -1,0 +1,325 @@
+<script>
+  /**
+   * Xsport Sport — 运动详情（单页紧凑版）
+   * ★ 所有信息一屏展示，无翻页、无滚动、无截断
+   * 466×466 圆形表盘适配
+   */
+  var router = require('@system.router')
+  var storage = require('@system.storage')
+
+  var TAG = '[Sport]'
+
+  export default {
+    data: {
+      sportName: '',
+      sportId: '',
+      sportColor: '#FF6B35',
+      mode: 'count', unit: '次',
+
+      /* 今日/昨日 */
+      todayVal: 0,
+      yesterdayVal: 0,
+
+      /* 历史记录（最多3条） */
+      records: [],
+
+      /* 统计数据 */
+      statAvgHr: 142,
+      statMaxHr: 165,
+      statScore: 85,
+      statDuration: '1:00',
+
+      /* 心率区间 */
+      heartRate: 142,
+      zoneFatigue: { val: '2.1', label: '燃脂', color: '#00C9A7' },
+      zoneCardio:  { val: '0.8', label: '有氧', color: '#5B9BD5' },
+      zonePeak:    { val: '0.1', label: '极限', color: '#F85149' },
+
+      timeStr: '', batteryPercent: 86
+    },
+
+    onInit() {
+      console.log(TAG, 'onInit start')
+      this._updateTime()
+      this._timer = setInterval(function() { this._updateTime() }.bind(this), 30000)
+
+      var params = this._getRouterParams()
+      if (params) {
+        console.log(TAG, '从路由参数加载（快速）')
+        this._applySportData(params)
+        return
+      }
+
+      console.log(TAG, '降级到 storage 读取')
+      storage.get({
+        key: 'current_test',
+        success: function(data) {
+          if (data) {
+            try { this._applySportData(JSON.parse(data)) }
+            catch(e) { console.error(TAG, 'parse error', e) }
+          }
+        }.bind(this)
+      })
+    },
+
+    onDestroy() {
+      if (this._timer) clearInterval(this._timer)
+    },
+
+    _updateTime() {
+      try {
+        var d = new Date()
+        this.timeStr = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0')
+      } catch(e) {}
+    },
+
+    _getRouterParams() {
+      try {
+        var info = this.$page || {}
+        var data = info.data || {}
+        if (data.sportData) {
+          return JSON.parse(data.sportData)
+        }
+        var appData = (this.$app && this.$app.$def) ? this.$app.$def : {}
+        if (appData._pendingSport) {
+          var r = appData._pendingSport
+          appData._pendingSport = null
+          return r
+        }
+      } catch(e) {
+        console.log(TAG, '路由参数解析失败:', e.message)
+      }
+      return null
+    },
+
+    _applySportData(item) {
+      this.sportName = item.label || ''
+      this.sportId = item.id || ''
+      this.mode = item.mode || 'count'
+      this.unit = item.unit || '次'
+      if (item.color) this.sportColor = item.color
+
+      console.log(TAG, '加载运动:', this.sportName)
+
+      var id = item.id || ''
+      // 每种运动的默认今日/昨日数据 + 统计数据
+      if (id === 'jump_rope') {
+        this.todayVal = 140; this.yesterdayVal = 120
+        this.statAvgHr = 148; this.statMaxHr = 168; this.statScore = 88; this.statDuration = '1:00'
+      } else if (id === '50m_run') {
+        this.todayVal = 7.8; this.yesterdayVal = 8.2
+        this.statAvgHr = 165; this.statMaxHr = 180; this.statScore = 82; this.statDuration = '0:08'
+      } else if (id === '800m_run') {
+        this.todayVal = 185; this.yesterdayVal = 198
+        this.statAvgHr = 170; this.statMaxHr = 185; this.statScore = 85; this.statDuration = '3:05'
+      } else if (id === '1000m_run') {
+        this.todayVal = 230; this.yesterdayVal = 245
+        this.statAvgHr = 172; this.statMaxHr = 188; this.statScore = 83; this.statDuration = '3:50'
+      } else if (id === 'long_jump') {
+        this.todayVal = 2.35; this.yesterdayVal = 2.28
+        this.statAvgHr = 130; this.statMaxHr = 155; this.statScore = 86; this.statDuration = '0:05'
+      } else if (id === 'sit_ups') {
+        this.todayVal = 48; this.yesterdayVal = 45
+        this.statAvgHr = 140; this.statMaxHr = 160; this.statScore = 90; this.statDuration = '1:00'
+      } else if (id === 'pull_up') {
+        this.todayVal = 8; this.yesterdayVal = 7
+        this.statAvgHr = 145; this.statMaxHr = 165; this.statScore = 78; this.statDuration = '0:30'
+      } else if (id === 'sit_reach') {
+        this.todayVal = 15; this.yesterdayVal = 13
+        this.statAvgHr = 110; this.statMaxHr = 125; this.statScore = 80; this.statDuration = '0:10'
+      } else {
+        this.todayVal = 85; this.yesterdayVal = 78
+        this.statAvgHr = 142; this.statMaxHr = 165; this.statScore = 85; this.statDuration = '1:00'
+      }
+
+      // 历史记录（最多3条）
+      var now = new Date()
+      var u = this.unit
+      var self = this
+      this.records = [
+        { value: this.todayVal, unit: u, time: self._fd(now), grade: '优秀', color: '#00C9A7' },
+        { value: Math.round(this.todayVal * 0.9), unit: u, time: self._fd(new Date(now - 86400000)), grade: '良好', color: '#FFB800' },
+        { value: Math.round(this.todayVal * 0.78), unit: u, time: self._fd(new Date(now - 172800000)), grade: '及格', color: '#5B9BD5' }
+      ]
+
+      this._loadRealHistory(id, u)
+    },
+
+    _loadRealHistory(sportId, defaultUnit) {
+      var self = this
+      storage.get({
+        key: 'history_records',
+        success: function(data) {
+          if (!data) return
+          try {
+            var allRecords = JSON.parse(data)
+            if (!allRecords.length) return
+
+            var myRecords = []
+            for (var i = 0; i < allRecords.length; i++) {
+              if (allRecords[i].sportId === sportId || !allRecords[i].sportId) {
+                var r = allRecords[i]
+                var g = r.score >= 90 ? '优秀' : (r.score >= 80 ? '良好' : (r.score >= 60 ? '及格' : '不及格'))
+                var c = r.score >= 90 ? '#00C9A7' : (r.score >= 80 ? '#FFB800' : (r.score >= 60 ? '#5B9BD5' : '#F85149'))
+                myRecords.push({
+                  value: r.value,
+                  unit: r.unit || defaultUnit,
+                  time: r.timestamp ? self._fd(new Date(r.timestamp)) : '--',
+                  grade: g,
+                  color: c,
+                  score: r.score
+                })
+              }
+              if (myRecords.length >= 3) break
+            }
+
+            if (myRecords.length > 0) {
+              console.log(TAG, '加载到', myRecords.length, '条', sportId, '历史记录')
+              self.records = myRecords
+              if (myRecords[0]) {
+                self.todayVal = myRecords[0].value
+              }
+            }
+          } catch(e) { console.error(TAG, '解析历史失败:', e) }
+        }.bind(this),
+        fail: function() {}
+      })
+    },
+
+    _fd(d) {
+      try {
+        return (d.getMonth()+1) + '-' + d.getDate() + ' ' +
+               String(d.getHours()).padStart(2,'0') + ':' +
+               String(d.getMinutes()).padStart(2,'0')
+      } catch(e) { return '--' }
+    },
+
+    startTraining() {
+      console.log(TAG, '开始训练 → test')
+      router.push({ uri: '/pages/test' })
+    },
+
+    goBack() { router.back() }
+  }
+</script>
+
+<template>
+  <div class="page">
+    <!-- ====== 顶部状态栏 ====== -->
+    <div class="status-bar">
+      <div class="battery-wrap">
+        <div class="batt-body"><div class="batt-fill" style="width: {{batteryPercent}}%"></div></div>
+        <text class="batt-pct">{{batteryPercent}}%</text>
+      </div>
+      <text class="time-txt">{{timeStr}}</text>
+      <div class="spacer"></div>
+    </div>
+
+    <!-- ====== 标题行：返回 + 运动名 ====== -->
+    <div class="title-row">
+      <div class="back-btn" @click="goBack"><text class="back-char">&lt;</text></div>
+      <text class="sport-name" style="color: {{sportColor}}">{{sportName}}</text>
+      <div class="title-spacer"></div>
+    </div>
+
+    <!-- ====== 数据行：今日 + 播放按钮 + 昨日 ====== -->
+    <div class="data-row">
+      <div class="ty-col">
+        <text class="ty-label">今日</text>
+        <text class="ty-val">{{todayVal}}</text>
+        <text class="ty-unit">{{unit}}</text>
+      </div>
+
+      <div class="play-circle" @click="startTraining">
+        <text class="play-icon">▶</text>
+      </div>
+
+      <div class="ty-col">
+        <text class="ty-label">昨日</text>
+        <text class="ty-val">{{yesterdayVal}}</text>
+        <text class="ty-unit">{{unit}}</text>
+      </div>
+    </div>
+
+    <!-- ====== 历史记录（最多3条） — 上下结构 ====== -->
+    <div class="rec-section">
+      <text class="section-label">最近记录</text>
+      <div class="rec-card" for="{{records}}">
+        <div class="rec-top">
+          <text class="rec-value">{{$item.value}} {{$item.unit}}</text>
+          <text class="rec-grade" style="color: {{$item.color}}">{{$item.grade}}</text>
+        </div>
+        <text class="rec-time">{{$item.time}}</text>
+      </div>
+    </div>
+
+    <!-- ====== 底部统计栏 ====== -->
+    <div class="bottom-stats">
+      <div class="bs-cell">
+        <text class="bs-num">{{statAvgHr}}</text>
+        <text class="bs-key">均心率</text>
+      </div>
+      <div class="bs-div"></div>
+      <div class="bs-cell">
+        <text class="bs-num">{{statScore}}</text>
+        <text class="bs-key">得分</text>
+      </div>
+      <div class="bs-div"></div>
+      <div class="bs-cell">
+        <text class="bs-num">{{statDuration}}</text>
+        <text class="bs-key">时长</text>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+  .page {
+    width: 466px; height: 466px;
+    flex-direction: column;
+    background-color: #000000;
+    align-items: center;
+  }
+
+  /* ====== 顶部状态栏 ====== */
+  .status-bar { width: 466px; height: 30px; flex-direction: row; align-items: center; justify-content: center; padding-left: 20px; padding-right: 20px; padding-top: 8px; }
+  .battery-wrap { width: 52px; height: 18px; flex-direction: row; align-items: center; }
+  .batt-body { width: 20px; height: 10px; border-radius: 2px; background-color: #222222; border-width: 1px; border-color: #555555; }
+  .batt-fill { height: 8px; min-width: 2px; border-radius: 1px; background-color: #00C9A7; }
+  .batt-pct { font-size: 11px; color: #ffffff; margin-left: 4px; }
+  .time-txt { flex: 1; text-align: center; font-size: 14px; color: #ffffff; }
+  .spacer { width: 52px; }
+
+  /* ====== 标题行 ====== */
+  .title-row { width: 466px; height: 36px; flex-direction: row; align-items: center; justify-content: center; padding-left: 16px; padding-right: 16px; margin-top: 2px; }
+  .back-btn { width: 28px; height: 28px; border-radius: 14px; background-color: #1a1a1a; justify-content: center; align-items: center; }
+  .back-char { font-size: 14px; color: #888888; }
+  .sport-name { font-size: 20px; margin-left: 8px; text-align: center; flex: 1; }
+  .title-spacer { width: 28px; }
+
+  /* ====== 数据行：今日 + 播放 + 昨日 ====== */
+  .data-row { width: 400px; height: 90px; flex-direction: row; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .ty-col { width: 100px; flex-direction: column; align-items: center; }
+  .ty-label { font-size: 11px; color: #888888; }
+  .ty-val { font-size: 26px; color: #ffffff; margin-top: 1px; }
+  .ty-unit { font-size: 10px; color: #666666; margin-top: 1px; }
+
+  .play-circle { width: 66px; height: 66px; border-radius: 33px; background-color: #FF6B35; justify-content: center; align-items: center; }
+  .play-icon { font-size: 24px; color: #ffffff; margin-left: 2px; }
+
+  /* ====== 历史记录 — 上下结构 ====== */
+  .rec-section { width: 400px; margin-top: 10px; flex-direction: column; align-items: center; }
+  .section-label { font-size: 12px; color: #666666; margin-bottom: 6px; }
+  .rec-card { width: 380px; flex-direction: column; padding: 6px 10px; margin-bottom: 4px; border-radius: 10px; background-color: #111111; }
+  .rec-top { flex-direction: row; align-items: center; justify-content: space-between; }
+  .rec-value { font-size: 14px; color: #ffffff; }
+  .rec-grade { font-size: 12px; }
+  .rec-time { font-size: 10px; color: #666666; margin-top: 2px; }
+
+  /* ====== 底部统计栏 — 紧凑版 ====== */
+  .bottom-stats { width: 360px; height: 44px; flex-direction: row; align-items: center; justify-content: space-around; margin-top: 8px; border-radius: 12px; background-color: #111111; }
+  .bs-cell { flex-direction: column; align-items: center; }
+  .bs-num { font-size: 15px; color: #ffffff; }
+  .bs-key { font-size: 9px; color: #777777; margin-top: 1px; }
+  .bs-div { width: 1px; height: 22px; background-color: #222222; }
+</style>

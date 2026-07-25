@@ -1,0 +1,141 @@
+<script>
+  /**
+   * Xsport Home — 体测训练首页
+   * ★ 单页紧凑版：466×466 圆屏适配，去掉时间显示
+   */
+  import { TEST_TYPES, SPORT_COLORS } from '../../common/constants'
+  var storage = require('@system.storage')
+  var router = require('@system.router')
+
+  var TAG = '[Home]'
+
+  export default {
+    data: {
+      sports: [],
+      batteryPercent: 86,
+      iconMap: {
+        jump_rope: '绳', '50m_run': '50', '800m_run': '8',
+        '1000m_run': '千', long_jump: '远', sit_ups: '仰',
+        pull_up: '引', sit_reach: '坐'
+      }
+    },
+
+    onInit() {
+      this.sports = TEST_TYPES || []
+    },
+
+    _getColor(id) { return SPORT_COLORS[id] || '#FF6B35' },
+    _getIconChar(id) { return this.iconMap[id] || '?' },
+
+    openSport(item) {
+      console.log(TAG, '选择运动:', item.id)
+      router.push({
+        uri: '/pages/sport',
+        params: { sportData: JSON.stringify(item) }
+      })
+      storage.set({ key: 'current_test', value: JSON.stringify(item) })
+    },
+
+    goRecent() {
+      router.push({ uri: '/pages/recent' })
+    },
+
+    goReport() {
+      router.push({ uri: '/pages/report' })
+    },
+
+    goSettings() {
+      router.push({ uri: '/pages/settings' })
+    }
+  }
+</script>
+
+<template>
+  <div class="page">
+    <!-- ====== 电池状态栏（仅电池，无时间） ====== -->
+    <div class="status-bar">
+      <div class="battery-wrap">
+        <div class="batt-body"><div class="batt-fill" style="width: {{batteryPercent}}%"></div></div>
+        <text class="batt-pct">{{batteryPercent}}%</text>
+      </div>
+    </div>
+
+    <!-- ====== 标题区 ====== -->
+    <div class="head-area">
+      <text class="title-main">运动</text>
+    </div>
+
+    <!-- ====== 运动列表 ====== -->
+    <div class="list-area">
+      <div class="row" for="{{sports}}" @click="openSport($item)">
+        <div class="icon-circle" style="background-color: {{_getColor($item.id)}}">
+          <text class="icon-ch">{{_getIconChar($item.id)}}</text>
+        </div>
+        <div class="info-col">
+          <text class="name-txt">{{$item.label}}</text>
+        </div>
+      </div>
+
+      <div class="row recent-row" @click="goRecent">
+        <div class="icon-circle recent-bg"><text class="icon-ch">录</text></div>
+        <div class="info-col">
+          <text class="name-txt">最近记录</text>
+        </div>
+      </div>
+
+      <div class="row report-row" @click="goReport">
+        <div class="icon-circle report-bg"><text class="icon-ch">AI</text></div>
+        <div class="info-col">
+          <text class="name-txt">AI 报告</text>
+        </div>
+      </div>
+
+      <div class="row settings-row" @click="goSettings">
+        <div class="icon-circle gear-bg"><text class="icon-ch">*</text></div>
+        <div class="info-col">
+          <text class="name-txt">设置</text>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+  .page {
+    width: 466px; height: 466px;
+    flex-direction: column;
+    background-color: #000000;
+    align-items: center;
+  }
+
+  /* ====== 电池栏 ====== */
+  .status-bar { width: 466px; height: 24px; flex-direction: row; align-items: center; justify-content: center; padding-top: 6px; }
+  .battery-wrap { width: 44px; height: 16px; flex-direction: row; align-items: center; }
+  .batt-body { width: 18px; height: 9px; border-radius: 2px; background-color: #222222; border-width: 1px; border-color: #555555; }
+  .batt-fill { height: 7px; min-width: 2px; border-radius: 1px; background-color: #00C9A7; }
+  .batt-pct { font-size: 10px; color: #cccccc; margin-left: 3px; }
+
+  /* ====== 标题区 ====== */
+  .head-area { width: 466px; height: 36px; flex-direction: row; align-items: center; justify-content: center; margin-top: 8px; }
+  .title-main { font-size: 22px; color: #ffffff; }
+
+  /* ====== 运动列表 ====== */
+  .list-area { width: 420px; flex-direction: column; align-items: center; margin-top: 16px; }
+  .row {
+    width: 400px; height: 64px;
+    flex-direction: row; align-items: center;
+    padding-left: 28px; padding-right: 28px;
+    margin-bottom: 10px; border-radius: 26px;
+    background-color: #252525;
+  }
+  .settings-row { background-color: #222222; }
+  .recent-row { background-color: #1a2a1a; }
+  .recent-bg { background-color: #2a3a2a; }
+  .report-row { background-color: #2a1605; }
+  .report-bg { background-color: #FF6B35; }
+  .icon-circle { width: 48px; height: 48px; border-radius: 18px; justify-content: center; align-items: center; margin-right: 14px; }
+  .gear-bg { background-color: #333333; }
+  .icon-ch { font-size: 24px; color: #ffffff; }
+  .info-col { flex: 1; flex-direction: column; justify-content: center; }
+  .name-txt { font-size: 16px; color: #ffffff; text-align: left; }
+</style>

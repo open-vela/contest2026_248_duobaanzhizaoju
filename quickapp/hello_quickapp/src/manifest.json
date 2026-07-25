@@ -1,0 +1,104 @@
+{
+  "package": "com.xsport.fitness",
+  "name": "Xsport",
+  "versionName": "1.0.0",
+  "versionCode": 1,
+  "minPlatformVersion": 1050,
+  "icon": "/common/logo.png",
+  "deviceTypeList": [
+    "watch"
+  ],
+  "features": [
+    {
+      "name": "service.health",
+      "params": {
+        "HEART_RATE": true,
+        "SPO2": true,
+        "STRESS": false,
+        "HEART_RATE_ECG": true
+      }
+    },
+    {
+      "name": "system.router"
+    },
+    {
+      "name": "system.network"
+    },
+    {
+      "name": "system.fetch"
+    },
+    {
+      "name": "system.storage"
+    },
+    {
+      "name": "system.vibrator"
+    }
+  ],
+  "permissions": [
+    {
+      "name": "hapjs.permission.HEALTH"
+    },
+    {
+      "name": "system.network"
+    },
+    {
+      "name": "system.fetch"
+    },
+    {
+      "name": "system.storage"
+    },
+    {
+      "name": "system.vibrator"
+    }
+  ],
+  "config": {
+    "logLevel": "debug",
+    "background": {
+      "features": ["service.health"]
+    }
+  },
+  "display": {
+    "titleBar": false,
+    "fullScreen": true,
+    "roundScreen": true,
+    "designWidth": 480
+  },
+  "router": {
+    "entry": "pages/index",
+    "pages": {
+      "pages/index": {
+        "component": "index"
+      },
+      "pages/home": {
+        "component": "home"
+      },
+      "pages/sport": {
+        "component": "sport"
+      },
+      "pages/test": {
+        "component": "test"
+      },
+      "pages/result": {
+        "component": "result"
+      },
+      "pages/history": {
+        "component": "history"
+      },
+      "pages/detail": {
+        "component": "detail"
+      },
+      "pages/settings": {
+        "component": "settings"
+      },
+      "pages/recent": {
+        "component": "recent"
+      },
+      "pages/report": {
+        "component": "report"
+      },
+      "pages/report_detail": {
+        "component": "report_detail"
+      }
+    }
+  }
+}

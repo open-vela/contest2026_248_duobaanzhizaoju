@@ -1,0 +1,259 @@
+<template>
+  <div class="page">
+    <!-- ① 电池栏 -->
+    <div class="battery-bar">
+      <div class="battery-wrap">
+        <div class="batt-body"><div class="batt-fill" style="width: {{batteryPercent}}%"></div></div>
+        <text class="batt-pct">{{batteryPercent}}%</text>
+      </div>
+    </div>
+
+    <!-- ② 标题行 -->
+    <div class="title-row">
+      <div class="back-btn" @click="goBack"><text class="back-char">&lt;</text></div>
+      <text class="page-title">{{weekRange}}</text>
+      <div class="title-spacer"></div>
+    </div>
+
+    <!-- 加载中 -->
+    <div class="loading-wrap" show="{{loading}}">
+      <text class="loading-text">加载中...</text>
+    </div>
+
+    <!-- ③ 报告正文（可滚动） -->
+    <div class="content-area" show="{{!loading && sections.length > 0}}">
+      <!-- 概要区 -->
+      <div class="summary-card" show="{{summary}}">
+        <text class="summary-txt">{{summary}}</text>
+      </div>
+
+      <!-- 报告正文块 -->
+      <div class="report-body" for="{{sections}}">
+        <div class="sec-block">
+          <div class="sec-header">
+            <text class="sec-icon">●</text>
+            <text class="sec-title">{{$item.title}}</text>
+          </div>
+          <div class="sec-content-wrap">
+            <text class="sec-content" for="{{$item.lines}}">{{$item}}</text>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI 信息 -->
+      <div class="ai-info">
+        <text class="ai-info-txt">{{aiInfo}}</text>
+      </div>
+    </div>
+
+    <!-- 空/错误状态 -->
+    <div class="empty-wrap" show="{{!loading && sections.length === 0}}">
+      <text class="empty-icon">📭</text>
+      <text class="empty-text">{{errorMsg}}</text>
+    </div>
+  </div>
+</template>
+
+<script>
+  /**
+   * Xsport ReportDetail — AI 周报详情
+   * 调用 /api/v1/ai/watch/report/{report_id} 无需认证
+   * 将 HTML 报告解析为段落展示
+   */
+  var storage = require('@system.storage')
+  var router = require('@system.router')
+  var fetch = require('@system.fetch')
+
+  var TAG = '[ReportDetail]'
+
+  export default {
+    data: {
+      reportId: 0,
+      weekRange: '',
+      summary: '',
+      sections: [],
+      aiInfo: '',
+      loading: true,
+      errorMsg: '报告加载失败',
+      batteryPercent: 86
+    },
+
+    onInit() {
+      console.log(TAG, 'onInit - 从 storage 读取 reportId')
+      this._loadReportId()
+    },
+
+    _loadReportId() {
+      var self = this
+      storage.get({
+        key: 'current_report_id',
+        success: function(val) {
+          console.log(TAG, 'current_report_id:', val)
+          if (val) {
+            self.reportId = parseInt(val)
+            self._fetchReport()
+          } else {
+            console.log(TAG, 'current_report_id 为空')
+            self.errorMsg = '报告参数错误'
+            self.loading = false
+          }
+        },
+        fail: function() {
+          console.log(TAG, 'current_report_id 读取失败')
+          self.errorMsg = '报告参数错误'
+          self.loading = false
+        }
+      })
+    },
+
+    _fetchReport() {
+      var self = this
+      self.loading = true
+      console.log(TAG, '开始获取报告', self.reportId)
+
+      // 读取 server_url，fail 时使用默认地址
+      storage.get({
+        key: 'server_url',
+        success: function(url) {
+          console.log(TAG, 'server_url:', url)
+          self._doFetch(url || '')
+        },
+        fail: function() {
+          console.log(TAG, 'server_url 未配置，使用默认地址')
+          self._doFetch('')
+        }
+      })
+    },
+
+    _doFetch(baseUrl) {
+      var self = this
+      var url = (baseUrl || 'http://101.35.231.154:9000')
+      var fullUrl = url + '/api/v1/ai/watch/report/' + self.reportId
+      console.log(TAG, '请求 URL:', fullUrl)
+
+      fetch.fetch({
+        url: fullUrl,
+        method: 'GET',
+        responseType: 'text',
+        success: function(resp) {
+          console.log(TAG, '响应 code:', resp.code)
+          try {
+            var r = JSON.parse(resp.data)
+            console.log(TAG, '解析成功, summary:', (r.summary || '').slice(0, 50))
+            self.weekRange = self._fmtDate(r.week_start) + ' ~ ' + self._fmtDate(r.week_end)
+            self.summary = r.summary || ''
+            self.sections = self._parseHtml(r.report_html || '')
+            self.aiInfo = 'AI 模型: ' + (r.model_name || r.provider || '--')
+          } catch(e) {
+            console.error(TAG, 'JSON 解析失败:', e)
+            self.sections = [{ title: '错误', lines: ['数据解析失败: ' + e.message] }]
+          }
+          self.loading = false
+        },
+        fail: function(err, code) {
+          console.error(TAG, '请求失败 code:', code, 'err:', JSON.stringify(err))
+          self.errorMsg = '网络请求失败 (' + (code || '?') + ')'
+          self.loading = false
+        }
+      })
+    },
+
+    /**
+     * 简易 HTML → 段落解析（<h3> 为节标题，<li> 为列表项）
+     */
+    _parseHtml(html) {
+      if (!html) return []
+      var sections = []
+
+      var h3re = /<h3[^>]*>(.*?)<\/h3>/gi
+      var h3matches = []
+      var m
+      while ((m = h3re.exec(html)) !== null) {
+        h3matches.push({ pos: m.index, title: this._stripTags(m[1]) })
+      }
+
+      if (h3matches.length === 0) {
+        sections.push({ title: '报告正文', lines: this._extractLi(html) })
+        return sections
+      }
+
+      for (var i = 0; i < h3matches.length; i++) {
+        var start = h3matches[i].pos + html.substring(h3matches[i].pos).indexOf('</h3>') + 5
+        var end = (i + 1 < h3matches.length) ? h3matches[i + 1].pos : html.length
+        var chunk = html.substring(start, end)
+        sections.push({
+          title: h3matches[i].title,
+          lines: this._extractLi(chunk)
+        })
+      }
+
+      return sections
+    },
+
+    _extractLi(chunk) {
+      var items = []
+      var re = /<li[^>]*>(.*?)<\/li>/gi
+      var m
+      while ((m = re.exec(chunk)) !== null) {
+        items.push(this._stripTags(m[1]))
+      }
+      if (items.length === 0) {
+        var plain = this._stripTags(chunk).replace(/\n+/g, ' ').trim()
+        if (plain) items.push(plain)
+      }
+      return items
+    },
+
+    _stripTags(s) {
+      if (!s) return ''
+      return s.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim()
+    },
+
+    _fmtDate(iso) {
+      if (!iso) return ''
+      var parts = iso.split('-')
+      return parts[1] + '/' + parts[2]
+    },
+
+    goBack() { router.back() }
+  }
+</script>
+
+<style>
+  .page { flex: 1; flex-direction: column; background-color: #000000; }
+
+  /* ① 电池栏 */
+  .battery-bar { width: 340px; height: 18px; flex-direction: row; align-items: center; justify-content: center; margin-top: 8px; align-self: center; }
+  .battery-wrap { width: 44px; height: 16px; flex-direction: row; align-items: center; }
+  .batt-body { width: 18px; height: 9px; border-radius: 2px; background-color: #222222; border-width: 1px; border-color: #555555; }
+  .batt-fill { height: 7px; min-width: 2px; border-radius: 1px; background-color: #00C9A7; }
+  .batt-pct { font-size: 10px; color: #cccccc; margin-left: 3px; }
+
+  /* ② 标题行 */
+  .title-row { width: 340px; height: 26px; flex-direction: row; align-items: center; margin-top: 4px; align-self: center; }
+  .back-btn { width: 22px; height: 22px; border-radius: 11px; background-color: #1a1a1a; justify-content: center; align-items: center; }
+  .back-char { font-size: 11px; color: #888888; }
+  .page-title { flex: 1; text-align: center; font-size: 14px; color: #FF6B35; }
+  .title-spacer { width: 22px; }
+
+  /* ③ 报告正文（可滚动区域） */
+  .content-area { flex-direction: column; padding: 0 33px 20px 33px; }
+  .summary-card { width: 380px; flex-direction: column; padding: 10px 12px; margin-bottom: 10px; border-radius: 10px; background-color: #141414; border-width: 1px; border-color: #2a2a2a; margin-top: 10px; }
+  .summary-txt { font-size: 12px; color: #cccccc; lines: 3; }
+  .report-body { width: 380px; flex-direction: column; }
+  .sec-block { width: 380px; flex-direction: column; margin-bottom: 10px; }
+  .sec-header { flex-direction: row; align-items: center; margin-bottom: 4px; }
+  .sec-icon { font-size: 8px; color: #FF6B35; margin-right: 6px; }
+  .sec-title { font-size: 13px; color: #FF6B35; }
+  .sec-content-wrap { flex-direction: column; padding-left: 14px; }
+  .sec-content { font-size: 12px; color: #aaaaaa; margin-bottom: 3px; }
+  .ai-info { width: 380px; flex-direction: row; justify-content: center; margin-top: 10px; margin-bottom: 20px; }
+  .ai-info-txt { font-size: 10px; color: #555555; }
+
+  /* 加载 / 空 */
+  .loading-wrap { position: absolute; top: 200px; left: 0; width: 466px; flex-direction: column; align-items: center; }
+  .loading-text { font-size: 13px; color: #666666; }
+  .empty-wrap { position: absolute; top: 200px; left: 0; width: 466px; flex-direction: column; align-items: center; }
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+  .empty-text { font-size: 13px; color: #666666; }
+</style>

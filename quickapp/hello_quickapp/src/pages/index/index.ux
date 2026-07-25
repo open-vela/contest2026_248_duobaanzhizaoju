@@ -1,15 +1,257 @@
+<script>
+  /**
+   * Xsport Index — 纯登录页
+   * 未登录: 显示登录表单
+   * 已登录: 自动跳转到 /pages/home
+   */
+  import { STORAGE_KEYS, DEFAULT_SERVER_URL, DEVICE_ID_PREFIX } from '../../common/constants'
+  import { read, write } from '../../common/storage'
+  import { init, registerDevice } from '../../common/network'
+  import router from '@system.router'
+
+  const TAG = '[Xsport-Index]'
+
+  export default {
+    data: {
+      studentId: 'STU20260001',
+      serverUrl: DEFAULT_SERVER_URL,
+      loading: false,
+      message: '',
+      pageReady: false
+    },
+
+    async onInit() {
+      console.log(TAG, 'onInit start')
+
+      // 检查是否已登录
+      var savedStudent = await read(STORAGE_KEYS.STUDENT_ID)
+      var savedServer = await read(STORAGE_KEYS.SERVER_URL)
+
+      if (savedStudent) {
+        console.log(TAG, '已登录(' + savedStudent + ') → 跳转home')
+        // 已登录 → 初始化网络并直接跳 home
+        if (savedServer) {
+          this.serverUrl = savedServer
+          init(savedServer)
+        }
+        // 确保有 device_id
+        var deviceId = await read(STORAGE_KEYS.DEVICE_ID)
+        if (!deviceId) {
+          deviceId = DEVICE_ID_PREFIX + '_' + Date.now().toString(36)
+          await write(STORAGE_KEYS.DEVICE_ID, deviceId)
+        }
+
+        // 注册全局数据
+        var app = this.$app.$def
+        app.setGlobalData('globalStudentId', savedStudent)
+        app.setGlobalData('globalServerUrl', savedServer || DEFAULT_SERVER_URL)
+        app.setGlobalData('globalDeviceId', deviceId)
+
+        // 直接跳转，无延迟
+        router.replace({ uri: '/pages/home' })
+        return
+      }
+
+      // 未登录 → 准备设备ID
+      var devId = await read(STORAGE_KEYS.DEVICE_ID)
+      if (!devId) {
+        devId = DEVICE_ID_PREFIX + '_' + Date.now().toString(36)
+        await write(STORAGE_KEYS.DEVICE_ID, devId)
+      }
+
+      // 显示登录页
+      this.pageReady = true
+      console.log(TAG, '未登录 → 显示登录表单')
+    },
+
+    /* ---- 登录 ---- */
+    onStudentIdChange(e) { this.studentId = e.value },
+    onServerUrlChange(e) { this.serverUrl = e.value },
+
+    async doLogin() {
+      var sid = this.studentId.trim()
+      var url = this.serverUrl.trim()
+
+      if (!sid) { this.message = '请输入学号'; return }
+      if (!url) { this.message = '请输入服务器地址'; return }
+
+      this.loading = true
+      this.message = ''
+
+      try {
+        await write(STORAGE_KEYS.STUDENT_ID, sid)
+        await write(STORAGE_KEYS.SERVER_URL, url)
+        init(url)
+
+        var deviceId = await read(STORAGE_KEYS.DEVICE_ID)
+        if (!deviceId) {
+          deviceId = DEVICE_ID_PREFIX + '_' + Date.now().toString(36)
+          await write(STORAGE_KEYS.DEVICE_ID, deviceId)
+        }
+
+        await registerDevice(deviceId, sid)
+
+        var app = this.$app.$def
+        app.setGlobalData('globalStudentId', sid)
+        app.setGlobalData('globalServerUrl', url)
+        app.setGlobalData('globalDeviceId', deviceId)
+
+        this.message = '连接成功 ✓'
+
+        // 快速跳转
+        router.replace({ uri: '/pages/home' })
+      } catch(err) {
+        this.message = '离线模式 (' + err.message.substring(0,20) + ')'
+        router.replace({ uri: '/pages/home' })
+      } finally {
+        this.loading = false
+      }
+    }
+  }
+</script>
+
 <template>
-  <div class="container">
-    <text>Hello QuickApp - contest 2026 team 000</text>
+  <div class="page" show="{{pageReady}}">
+    <div class="container">
+      <!-- Logo -->
+      <image class="logo" src="/common/logo.png"></image>
+
+      <!-- 标题 -->
+      <text class="title">Xsport 体测记录</text>
+      <text class="subtitle">中学生体测数据记录系统</text>
+
+      <!-- 登录卡片 -->
+      <div class="card">
+        <!-- 学号 -->
+        <text class="label">学号</text>
+        <input class="input" type="text" placeholder="请输入学号"
+          value="{{studentId}}" @change="onStudentIdChange"/>
+
+        <!-- 服务器地址 -->
+        <text class="label">服务器地址</text>
+        <input class="input" type="text" placeholder="http://101.35.231.154:9000"
+          value="{{serverUrl}}" @change="onServerUrlChange"/>
+
+        <!-- 登录按钮 -->
+        <input class="btn" type="button"
+          value="{{loading ? '连接中...' : '连接设备'}}"
+          disabled="{{loading}}"
+          style="opacity: {{loading?0.6:1}}"
+          @click="doLogin"/>
+
+        <!-- 状态消息 -->
+        <div class="status-box" show="{{message !== ''}}">
+          <text class="msg">{{message}}</text>
+        </div>
+      </div>
+
+      <!-- 版本信息 -->
+      <text class="version">v1.0.0</text>
+    </div>
   </div>
 </template>
 
 <style>
-.container { flex-direction: column; justify-content: center; align-items: center; }
-</style>
+  .page {
+    width: 466px;
+    height: 466px;
+    background-color: #000000;
+    flex-direction: column;
+  }
 
-<script>
-export default {
-  data: { msg: 'hello' }
-}
-</script>
+  .container {
+    width: 466px;
+    height: 466px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .logo {
+    width: 72px;
+    height: 72px;
+    border-radius: 18px;
+    margin-bottom: 16px;
+  }
+
+  .title {
+    font-size: 24px;
+    color: #ffffff;
+    font-weight: normal;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: #777777;
+    margin-bottom: 32px;
+  }
+
+  .card {
+    width: 100%;
+    flex-direction: column;
+    background-color: #151515;
+    border-radius: 20px;
+    padding-top: 28px;
+    padding-bottom: 28px;
+    padding-left: 20px;
+    padding-right: 20px;
+    border-width: 1px;
+    border-color: #2a2a2a;
+  }
+
+  .label {
+    font-size: 13px;
+    color: #888888;
+    margin-bottom: 8px;
+    margin-top: 4px;
+  }
+
+  .input {
+    width: 100%;
+    height: 46px;
+    font-size: 16px;
+    color: #ffffff;
+    background-color: #1a1a1a;
+    border-width: 1px;
+    border-color: #333333;
+    border-radius: 12px;
+    padding-left: 14px;
+    placeholder-color: #555555;
+    margin-bottom: 4px;
+  }
+
+  .btn {
+    width: 100%;
+    height: 48px;
+    font-size: 17px;
+    color: #ffffff;
+    background-color: #FF6B35;
+    border-radius: 24px;
+    border-width: 0;
+    margin-top: 20px;
+    font-weight: normal;
+  }
+
+  .status-box {
+    width: 100%;
+    margin-top: 14px;
+    align-items: center;
+  }
+
+  .msg {
+    font-size: 13px;
+    color: #3fb950;
+    padding: 8px 16px;
+    border-radius: 10px;
+    background-color: #152515;
+  }
+
+  .version {
+    font-size: 11px;
+    color: #444444;
+    margin-top: 28px;
+  }
+</style>

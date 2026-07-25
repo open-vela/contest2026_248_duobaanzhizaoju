@@ -1,0 +1,61 @@
+<script>
+  /**
+   * Xsport 体测记录 - 快应用入口
+   * 中学生体测数据记录手表应用
+   *
+   * 全局状态管理:
+   *   globalStudentId  - 当前登录学生学号
+   *   globalDeviceId   - 设备唯一标识
+   *   globalServerUrl  - 服务器地址
+   *
+   * 离线同步机制:
+   *   体测记录 -> 本地队列 -> 监听网络 -> 联网自动推送 -> 服务器
+   */
+  import { STORAGE_KEYS } from './common/constants'
+  import { read } from './common/storage'
+  import { init as initNetwork } from './common/network'
+  import { startNetworkMonitor, checkAndSync } from './common/sync'
+
+  export default {
+    data: {
+      globalStudentId: '',
+      globalDeviceId: '',
+      globalServerUrl: ''
+    },
+
+    async onCreate() {
+      console.log('[Xsport] 体测记录快应用启动')
+
+      // 恢复本地保存的配置
+      try {
+        this.globalStudentId = (await read(STORAGE_KEYS.STUDENT_ID)) || ''
+        this.globalDeviceId = (await read(STORAGE_KEYS.DEVICE_ID)) || ''
+        this.globalServerUrl = (await read(STORAGE_KEYS.SERVER_URL)) || ''
+
+        // 初始化网络模块
+        initNetwork(this.globalServerUrl)
+      } catch (e) {
+        console.warn('[Xsport] 恢复配置失败:', e.message)
+      }
+
+      // 启动网络监听（联网时自动推送缓存数据）
+      startNetworkMonitor()
+
+      // 启动时检查是否有待同步数据
+      setTimeout(async () => {
+        await checkAndSync()
+      }, 2000)
+    },
+
+    onDestroy() {
+      console.log('[Xsport] 体测记录快应用退出')
+    },
+
+    /**
+     * 全局数据更新方法 (子页面通过 $app.$def 调用)
+     */
+    setGlobalData(key, value) {
+      this[key] = value
+    }
+  }
+</script>

@@ -1,0 +1,234 @@
+<script>
+  /**
+   * Xsport Settings — 设置页（设计稿#5）
+   * 个人信息 / 体测配置(toggle) / 数据同步 / 退出登录
+   */
+  var storage = require('@system.storage')
+  var router = require('@system.router')
+
+  var TAG = '[Settings]'
+
+  export default {
+    data: {
+      // 个人信息
+      studentName: '张三',
+      studentId: 'STU20260001',
+      gradeLevel: '初二',
+
+      // 开关状态
+      autoTimer: true,
+      voiceReport: true,
+      vibrateFeedback: false,
+
+      // 数据同步
+      wifiStatus: '已连接',
+      cacheSize: '12.3 MB',
+
+      // 公共
+      timeStr: '',
+      batteryPercent: 86
+    },
+
+    onInit() {
+      console.log(TAG, 'Settings 页面初始化')
+      this._updateTime()
+      this._timer = setInterval(function() { this._updateTime() }.bind(this), 30000)
+
+      // 读取已存储的学号等
+      var self = this
+      storage.get({
+        key: 'student_id',
+        success: function(data) { if (data) { self.studentId = data } }
+      })
+    },
+
+    onDestroy() {
+      if (this._timer) clearInterval(this._timer)
+    },
+
+    _updateTime() {
+      try { this.timeStr = String(new Date().getHours()).padStart(2,'0') + ':' + String(new Date().getMinutes()).padStart(2,'0') } catch(e){}
+    },
+
+    /* ---- 开关切换 ---- */
+    toggleAuto() { this.autoTimer = !this.autoTimer },
+    toggleVoice() { this.voiceReport = !this.voiceReport },
+    toggleVibrate() { this.vibrateFeedback = !this.vibrateFeedback },
+
+    /* ---- 清除缓存 ---- */
+    clearCache() {
+      this.cacheSize = '0 KB'
+      try {
+        storage.clear()
+        console.log(TAG, '缓存已清除')
+      } catch(e) {}
+    },
+
+    /* ---- 退出登录 → 清除 student_id → 跳回 index ---- */
+    logout() {
+      storage.set({
+        key: 'student_id',
+        value: '',
+        success: function() {
+          console.log(TAG, '已登出')
+          setTimeout(function() { router.replace({ uri: '/pages/index' }) }, 200)
+        }
+      })
+    },
+
+    goBack() {
+      router.back()
+    }
+  }
+</script>
+
+<template>
+  <div class="page">
+    <!-- ====== 状态栏 ====== -->
+    <div class="status-bar">
+      <div class="battery-wrap">
+        <div class="batt-body"><div class="batt-fill" style="width: {{batteryPercent}}%"></div></div>
+        <text class="batt-tip">|</text>
+        <text class="batt-pct">{{batteryPercent}}%</text>
+      </div>
+      <text class="time-txt">{{timeStr}}</text>
+      <text class="spacer"></text>
+    </div>
+
+    <!-- 返回按钮 -->
+    <div class="back-wrap">
+      <div class="back-btn" @click="goBack">
+        <text class="back-char">&lt;</text>
+      </div>
+    </div>
+
+    <!-- 标题 -->
+    <text class="title">设置</text>
+
+    <!-- ====== 设置列表 ====== -->
+    <div class="list-area">
+
+      <!-- 个人信息区标题 -->
+      <text class="sec-label">个人信息</text>
+
+      <!-- 姓名 -->
+      <div class="row">
+        <text class="row-key">姓名</text>
+        <text class="row-val">{{studentName}}</text>
+      </div>
+
+      <!-- 学号 -->
+      <div class="row">
+        <text class="row-key">学号</text>
+        <text class="row-val dim">{{studentId}}</text>
+      </div>
+
+      <!-- 年级 -->
+      <div class="row">
+        <text class="row-key">年级</text>
+        <text class="row-val dim">{{gradeLevel}}</text>
+      </div>
+
+      <!-- 体测配置区标题 -->
+      <text class="sec-label">体测配置</text>
+
+      <!-- 自动计时 -->
+      <div class="row" @click="toggleAuto">
+        <text class="row-key">自动计时</text>
+        <div class="{{autoTimer ? 'toggle-on' : 'toggle-off'}}">
+          <div class="{{autoTimer ? 'knob-right' : 'knob-left'}}"></div>
+        </div>
+      </div>
+
+      <!-- 语音播报 -->
+      <div class="row" @click="toggleVoice">
+        <text class="row-key">语音播报</text>
+        <div class="{{voiceReport ? 'toggle-on' : 'toggle-off'}}">
+          <div class="{{voiceReport ? 'knob-right' : 'knob-left'}}"></div>
+        </div>
+      </div>
+
+      <!-- 震动反馈 -->
+      <div class="row" @click="toggleVibrate">
+        <text class="row-key">震动反馈</text>
+        <div class="{{vibrateFeedback ? 'toggle-on' : 'toggle-off'}}">
+          <div class="{{vibrateFeedback ? 'knob-right' : 'knob-left'}}"></div>
+        </div>
+      </div>
+
+      <!-- 数据同步区标题 -->
+      <text class="sec-label">数据同步</text>
+
+      <!-- WiFi上传 -->
+      <div class="row">
+        <text class="row-key">WiFi上传</text>
+        <text class="row-val dim-sm">{{wifiStatus}}</text>
+      </div>
+
+      <!-- 清除缓存 -->
+      <div class="row" @click="clearCache">
+        <text class="row-key">清除本地缓存</text>
+        <text class="cache-txt">{{cacheSize}}</text>
+      </div>
+    </div>
+
+    <!-- ====== 退出登录 ====== -->
+    <div class="logout-area" @click="logout">
+      <text class="logout-txt">退出登录</text>
+    </div>
+  </div>
+</template>
+
+<style>
+  .page { width: 466px; height: 466px; flex-direction: column; background-color: #000000; align-items: center; }
+
+  /* --- 状态栏 --- */
+  .status-bar { width: 466px; height: 36px; flex-direction: row; align-items: center; padding-left: 20px; padding-right: 20px; padding-top: 10px; }
+  .battery-wrap { width: 64px; height: 24px; flex-direction: row; align-items: center; }
+  .batt-body { width: 22px; height: 12px; border-radius: 2px; background-color: #222222; border-width: 1px; border-color: #555555; justify-content: flex-start; }
+  .batt-fill { height: 10px; min-width: 2px; border-radius: 1px; background-color: #00C9A7; }
+  .batt-tip { font-size: 12px; color: #555555; margin-left: 2px; }
+  .batt-pct { font-size: 12px; color: #ffffff; margin-left: 4px; }
+  .time-txt { width: 200px; text-align: center; font-size: 16px; color: #ffffff; }
+  .spacer { width: 60px; font-size: 11px; color: transparent; }
+
+  .back-wrap { width: 466px; padding-left: 18px; padding-top: 4px; }
+  .back-btn { width: 38px; height: 38px; border-radius: 19px; background-color: #1a1a1a; justify-content: center; align-items: center; }
+  .back-char { font-size: 18px; color: #888888; }
+
+  .title { font-size: 22px; color: #ffffff; margin-top: 8px; margin-bottom: 16px; }
+
+  /* --- 列表 --- */
+  .list-area { width: 400px; flex-direction: column; }
+
+  .sec-label { font-size: 13px; color: #555555; margin-top: 14px; margin-bottom: 8px; margin-left: 6px; }
+
+  .row {
+    width: 400px;
+    height: 52px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 16px;
+    padding-right: 16px;
+    margin-bottom: 3px;
+    border-radius: 14px;
+    background-color: #161616;
+  }
+
+  .row-key { font-size: 16px; color: #ffffff; }
+  .row-val { font-size: 15px; color: #cccccc; }
+  .dim { color: #888888; }
+  .dim-sm { font-size: 13px; color: #777777; }
+  .cache-txt { font-size: 14px; color: #F85149; }
+
+  /* Toggle 开关 */
+  .toggle-off { width: 46px; height: 26px; border-radius: 13px; background-color: #444444; justify-content: flex-start; align-items: center; padding-left: 3px; }
+  .toggle-on { width: 46px; height: 26px; border-radius: 13px; background-color: #00C9A7; justify-content: flex-end; align-items: center; padding-right: 3px; }
+  .knob-left { width: 20px; height: 20px; border-radius: 10px; background-color: #ffffff; }
+  .knob-right { width: 20px; height: 20px; border-radius: 10px; background-color: #ffffff; }
+
+  /* --- 退出 --- */
+  .logout-area { width: 360px; height: 46px; border-radius: 23px; background-color: #1a1515; justify-content: center; align-items: center; margin-top: 28px; border-width: 1px; border-color: #F85149; }
+  .logout-txt { font-size: 16px; color: #F85149; }
+</style>

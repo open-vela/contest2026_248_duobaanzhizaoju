@@ -1,0 +1,164 @@
+<template>
+  <div class="page">
+    <!-- ① 电池栏 -->
+    <div class="battery-bar">
+      <div class="battery-wrap">
+        <div class="batt-body"><div class="batt-fill" style="width: {{batteryPercent}}%"></div></div>
+        <text class="batt-pct">{{batteryPercent}}%</text>
+      </div>
+    </div>
+
+    <!-- ② 标题行 -->
+    <div class="title-row">
+      <div class="back-btn" @click="goBack"><text class="back-char">&lt;</text></div>
+      <text class="page-title">AI 周报</text>
+      <div class="title-spacer"></div>
+    </div>
+
+    <!-- ③ 报告列表 -->
+    <div class="report-list" show="{{!loading && reports.length > 0}}">
+      <div class="rep-card" for="{{reports}}" @click="openReport($item)">
+        <div class="rep-top">
+          <text class="rep-date">{{$item.dateRange}}</text>
+          <text class="rep-badge">查看详情 ›</text>
+        </div>
+        <text class="rep-summary">{{$item.summary}}</text>
+      </div>
+    </div>
+
+    <!-- 加载中 -->
+    <div class="loading-wrap" show="{{loading}}">
+      <text class="loading-text">加载中...</text>
+    </div>
+
+    <!-- ④ 空状态 -->
+    <div class="empty-wrap" show="{{!loading && reports.length === 0}}">
+      <text class="empty-icon">📊</text>
+      <text class="empty-text">暂无 AI 周报</text>
+      <text class="empty-sub">等待老师生成本周报告</text>
+    </div>
+  </div>
+</template>
+
+<script>
+  /**
+   * Xsport Report — AI 周报列表
+   * 拉取 /api/v1/ai/watch/reports 无需认证
+   */
+  var storage = require('@system.storage')
+  var router = require('@system.router')
+
+  export default {
+    data: {
+      reports: [],
+      loading: true,
+      batteryPercent: 86
+    },
+
+    onInit() {
+      this._fetchReports()
+    },
+
+    _fetchReports() {
+      var self = this
+      self.loading = true
+
+      storage.get({
+        key: 'student_id',
+        success: function(sid) {
+          if (!sid) {
+            self.loading = false
+            return
+          }
+          storage.get({
+            key: 'server_url',
+            success: function(url) {
+              url = url || 'http://101.35.231.154:9000'
+              var fullUrl = url + '/api/v1/ai/watch/reports?student_id=' + encodeURIComponent(sid) + '&limit=5'
+              var fetch = require('@system.fetch')
+              fetch.fetch({
+                url: fullUrl,
+                method: 'GET',
+                responseType: 'text',
+                success: function(resp) {
+                  try {
+                    var list = JSON.parse(resp.data)
+                    var mapped = []
+                    for (var i = 0; i < list.length; i++) {
+                      var r = list[i]
+                      mapped.push({
+                        id: r.id,
+                        dateRange: self._fmtDate(r.week_start) + ' - ' + self._fmtDate(r.week_end),
+                        summary: r.summary || '暂无摘要'
+                      })
+                    }
+                    self.reports = mapped
+                  } catch(e) { console.error('[Report]', e) }
+                  self.loading = false
+                },
+                fail: function() { self.loading = false }
+              })
+            }
+          })
+        }
+      })
+    },
+
+    _fmtDate(iso) {
+      if (!iso) return ''
+      // "2026-07-14" → "07/14"
+      var parts = iso.split('-')
+      return parts[1] + '/' + parts[2]
+    },
+
+    openReport(item) {
+      var self = this
+      storage.set({
+        key: 'current_report_id',
+        value: String(item.id),
+        success: function() {
+          router.push({ uri: '/pages/report_detail' })
+        },
+        fail: function() {
+          router.push({ uri: '/pages/report_detail' })
+        }
+      })
+    },
+
+    goBack() { router.back() }
+  }
+</script>
+
+<style>
+  .page { position: absolute; left: 0; top: 0; width: 466px; height: 466px; background-color: #000000; flex-direction: column; align-items: center; }
+
+  /* ① 电池栏 */
+  .battery-bar { position: absolute; top: 8px; left: 63px; width: 340px; height: 18px; flex-direction: row; align-items: center; justify-content: center; }
+  .battery-wrap { width: 44px; height: 16px; flex-direction: row; align-items: center; }
+  .batt-body { width: 18px; height: 9px; border-radius: 2px; background-color: #222222; border-width: 1px; border-color: #555555; }
+  .batt-fill { height: 7px; min-width: 2px; border-radius: 1px; background-color: #00C9A7; }
+  .batt-pct { font-size: 10px; color: #cccccc; margin-left: 3px; }
+
+  /* ② 标题行 */
+  .title-row { position: absolute; top: 32px; left: 63px; width: 340px; height: 24px; flex-direction: row; align-items: center; }
+  .back-btn { width: 22px; height: 22px; border-radius: 11px; background-color: #1a1a1a; justify-content: center; align-items: center; }
+  .back-char { font-size: 11px; color: #888888; }
+  .page-title { flex: 1; text-align: center; font-size: 14px; color: #FF6B35; }
+  .title-spacer { width: 22px; }
+
+  /* ③ 报告列表 */
+  .report-list { position: absolute; top: 64px; left: 43px; width: 380px; flex-direction: column; }
+  .rep-card { width: 380px; flex-direction: column; padding: 10px 12px; margin-bottom: 8px; border-radius: 12px; background-color: #141414; border-width: 1px; border-color: #2a2a2a; }
+  .rep-top { flex-direction: row; align-items: center; justify-content: space-between; }
+  .rep-date { font-size: 14px; color: #ffffff; }
+  .rep-badge { font-size: 11px; color: #FF6B35; }
+  .rep-summary { font-size: 12px; color: #aaaaaa; margin-top: 6px; lines: 2; text-overflow: ellipsis; }
+
+  /* 加载 / 空状态 */
+  .loading-wrap { position: absolute; top: 200px; left: 0; width: 466px; flex-direction: column; align-items: center; }
+  .loading-text { font-size: 13px; color: #666666; }
+  .empty-wrap { position: absolute; top: 170px; left: 0; width: 466px; flex-direction: column; align-items: center; }
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+  .empty-text { font-size: 14px; color: #ffffff; }
+  .empty-sub { font-size: 12px; color: #666666; margin-top: 4px; }
+</style>

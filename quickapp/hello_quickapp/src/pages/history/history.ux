@@ -1,0 +1,531 @@
+<script>
+  /**
+   * Xsport History 历史记录页面
+   * 本地记录 + 同步状态 + 服务器查询
+   */
+  import { TEST_TYPES, STORAGE_KEYS, ROUTES } from '../../common/constants'
+  import { getAllRecords, syncPending, getSyncState } from '../../common/sync'
+  import { getStudentRecords } from '../../common/network'
+  import { read } from '../../common/storage'
+  import router from '@system.router'
+
+  const TAB_ITEMS = ['本地记录', '服务器记录']
+
+  export default {
+    data: {
+      activeTab: 0,
+      tabItems: TAB_ITEMS,
+
+      // 本地数据
+      localRecords: [],
+      pendingCount: 0,
+      syncStateText: '',
+      syncing: false,
+
+      // 服务器数据
+      serverRecords: [],
+      serverLoading: false,
+      serverError: '',
+
+      // 详情
+      detailVisible: false,
+      detailRecord: null
+    },
+
+    async onInit() {
+      await this.loadLocalRecords()
+      await this.updateSyncState()
+    },
+
+    async loadLocalRecords() {
+      this.localRecords = await getAllRecords()
+    },
+
+    async updateSyncState() {
+      const state = await getSyncState()
+      this.pendingCount = state.pending
+      if (state.pending > 0) {
+        this.syncStateText = `${state.pending} 条待同步`
+      } else {
+        this.syncStateText = ''
+      }
+    },
+
+    async switchTab(index) {
+      this.activeTab = index
+      if (index === 1 && this.serverRecords.length === 0) {
+        await this.loadServerRecords()
+      }
+    },
+
+    async loadServerRecords() {
+      this.serverLoading = true
+      this.serverError = ''
+
+      try {
+        const studentId = await read(STORAGE_KEYS.STUDENT_ID)
+        if (!studentId) {
+          this.serverError = '请先设置学号'
+          return
+        }
+
+        const res = await getStudentRecords(studentId)
+        this.serverRecords = (res.records || []).sort(
+          (a, b) => new Date(b.test_date) - new Date(a.test_date)
+        )
+      } catch (e) {
+        this.serverError = e.message || '网络不可用'
+      } finally {
+        this.serverLoading = false
+      }
+    },
+
+    async doSync() {
+      this.syncing = true
+      try {
+        const result = await syncPending()
+        this.syncStateText = result.success > 0 ? `已同步 ${result.success} 条` : '同步完成'
+      } catch (e) {
+        this.syncStateText = `同步失败: ${e.message}`
+      } finally {
+        this.syncing = false
+        await this.loadLocalRecords()
+        await this.updateSyncState()
+      }
+    },
+
+    goHome() {
+      router.push({ uri: ROUTES.HOME })
+    },
+
+    // ---- 记录展示 ----
+
+    getTestLabel(type) {
+      const found = TEST_TYPES.find((t) => t.id === type)
+      return found ? found.label : type
+    },
+
+    getTestUnit(type) {
+      const found = TEST_TYPES.find((t) => t.id === type)
+      return found ? found.unit : ''
+    },
+
+    getDisplayValue(record) {
+      const mode = this.getMode(record.test_type)
+      if (mode === 'count') return `${record.count || 0}`
+      if (mode === 'time') {
+        const sec = record.time_sec || 0
+        const m = Math.floor(sec / 60)
+        const s = sec % 60
+        return `${m}'${String(s).padStart(2, '0')}"`
+      }
+      return `${record.distance_m || 0}`
+    },
+
+    getMode(type) {
+      const found = TEST_TYPES.find((t) => t.id === type)
+      return found ? found.mode : ''
+    },
+
+    getDateStr(dateStr) {
+      if (!dateStr) return ''
+      const d = new Date(dateStr)
+      return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+    },
+
+    isSynced(record) {
+      return record._synced === true
+    },
+
+    openDetail(record) {
+      this.detailRecord = record
+      this.detailVisible = true
+    },
+
+    closeDetail() {
+      this.detailVisible = false
+      this.detailRecord = null
+    }
+  }
+</script>
+
+<template>
+  <div class="history-page">
+    <!-- 标题栏 -->
+    <div class="header">
+      <div class="header-back" @click="goHome">
+        <text class="back-arrow">‹</text>
+      </div>
+      <text class="header-title">历史记录</text>
+      <div class="header-spacer"></div>
+    </div>
+
+    <!-- 同步状态条 -->
+    <div class="sync-bar" show="{{ syncStateText }}">
+      <text class="sync-bar-text">📤 {{syncStateText}}</text>
+      <div class="sync-bar-btn" @click="doSync">
+        <text class="sync-bar-btn-text">{{ syncing ? '同步中...' : '立即同步' }}</text>
+      </div>
+    </div>
+
+    <!-- Tab 切换 -->
+    <div class="tabs">
+      <div
+        class="tab-item {{ activeTab === $idx ? 'active' : '' }}"
+        for="{{tabItems}}"
+        @click="switchTab($idx)"
+      >
+        <text class="tab-text {{ activeTab === $idx ? 'active' : '' }}">{{$item}}</text>
+      </div>
+    </div>
+
+    <!-- ====== 本地记录列表 ====== -->
+    <list class="record-list" show="{{ activeTab === 0 }}">
+      <list-item for="{{ localRecords }}" type="record-card" class="record-item" @click="openDetail($item)">
+        <div class="record-card">
+          <div class="record-left">
+            <text class="record-type">{{getTestLabel($item.test_type)}}</text>
+            <text class="record-date">{{getDateStr($item.test_date)}}</text>
+          </div>
+          <div class="record-right">
+            <text class="record-value">{{getDisplayValue($item)}} {{getTestUnit($item.test_type)}}</text>
+          </div>
+          <div class="record-sync-badge" show="{{ isSynced($item) }}">
+            <text class="sync-badge-text">✓</text>
+          </div>
+        </div>
+      </list-item>
+      <list-item type="empty-hint" show="{{ localRecords.length === 0 }}">
+        <div class="empty-state">
+          <text class="empty-icon">📭</text>
+          <text class="empty-text">暂无本地记录</text>
+          <text class="empty-hint">完成体测后自动保存</text>
+        </div>
+      </list-item>
+    </list>
+
+    <!-- ====== 服务器记录列表 ====== -->
+    <div class="record-list" show="{{ activeTab === 1 }}">
+      <div class="loading" show="{{ serverLoading }}">
+        <text class="loading-text">加载中...</text>
+      </div>
+      <div class="error" show="{{ serverError }}">
+        <text class="error-text">{{serverError}}</text>
+      </div>
+      <list>
+        <list-item for="{{ serverRecords }}" type="record-card" class="record-item" @click="openDetail($item)">
+          <div class="record-card">
+            <div class="record-left">
+              <text class="record-type">{{getTestLabel($item.test_type)}}</text>
+              <text class="record-date">{{getDateStr($item.test_date)}}</text>
+            </div>
+            <div class="record-right">
+              <text class="record-value">{{getDisplayValue($item)}} {{getTestUnit($item.test_type)}}</text>
+            </div>
+          </div>
+        </list-item>
+        <list-item type="empty-hint" show="{{ serverRecords.length === 0 && !serverLoading && !serverError }}">
+          <div class="empty-state">
+            <text class="empty-icon">☁️</text>
+            <text class="empty-text">暂无服务器记录</text>
+          </div>
+        </list-item>
+      </list>
+    </div>
+
+    <!-- ====== 详情弹窗 ====== -->
+    <div class="detail-mask" show="{{detailVisible}}" @click="closeDetail">
+      <div class="detail-panel">
+        <text class="detail-title">体测详情</text>
+        <div class="detail-row">
+          <text class="detail-key">项目</text>
+          <text class="detail-val">{{detailRecord ? getTestLabel(detailRecord.test_type) : ''}}</text>
+        </div>
+        <div class="detail-row">
+          <text class="detail-key">成绩</text>
+          <text class="detail-val highlight">{{detailRecord ? getDisplayValue(detailRecord) : ''}} {{detailRecord ? getTestUnit(detailRecord.test_type) : ''}}</text>
+        </div>
+        <div class="detail-row" show="{{ detailRecord && detailRecord.avg_hr }}">
+          <text class="detail-key">平均心率</text>
+          <text class="detail-val">{{detailRecord ? detailRecord.avg_hr : ''}} bpm</text>
+        </div>
+        <div class="detail-row" show="{{ detailRecord && detailRecord.max_hr }}">
+          <text class="detail-key">最高心率</text>
+          <text class="detail-val">{{detailRecord ? detailRecord.max_hr : ''}} bpm</text>
+        </div>
+        <div class="detail-row">
+          <text class="detail-key">日期</text>
+          <text class="detail-val">{{detailRecord ? getDateStr(detailRecord.test_date) : ''}}</text>
+        </div>
+        <div class="detail-close" @click="closeDetail">
+          <text class="detail-close-text">关闭</text>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+  .history-page {
+    flex: 1;
+    flex-direction: column;
+    background-color: #0d1117;
+  }
+
+  .header {
+    flex-direction: row;
+    align-items: center;
+    padding: 16px 12px;
+  }
+
+  .header-back {
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .back-arrow {
+    font-size: 28px;
+    color: #8b949e;
+  }
+
+  .header-title {
+    flex: 1;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #e6edf3;
+  }
+
+  .header-spacer {
+    width: 36px;
+  }
+
+  .sync-bar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 12px 8px;
+    padding: 8px 12px;
+    background-color: rgba(210, 153, 34, 0.1);
+    border-radius: 10px;
+    border: 1px solid rgba(210, 153, 34, 0.3);
+  }
+
+  .sync-bar-text {
+    font-size: 12px;
+    color: #d29922;
+  }
+
+  .sync-bar-btn {
+    padding: 4px 10px;
+    background-color: #d29922;
+    border-radius: 6px;
+  }
+
+  .sync-bar-btn-text {
+    font-size: 11px;
+    color: #0d1117;
+    font-weight: 600;
+  }
+
+  .tabs {
+    flex-direction: row;
+    padding: 0 12px;
+    margin-bottom: 8px;
+  }
+
+  .tab-item {
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 2px solid #30363d;
+  }
+
+  .tab-item.active {
+    border-bottom-color: #1a7f4b;
+  }
+
+  .tab-text {
+    font-size: 13px;
+    color: #8b949e;
+  }
+
+  .tab-text.active {
+    color: #e6edf3;
+    font-weight: 600;
+  }
+
+  .record-list {
+    flex: 1;
+    padding: 0 12px;
+  }
+
+  .record-item {
+    margin-bottom: 6px;
+  }
+
+  .record-card {
+    flex-direction: row;
+    align-items: center;
+    padding: 12px;
+    background-color: #161b22;
+    border-radius: 10px;
+    border: 1px solid #30363d;
+  }
+
+  .record-left {
+    flex: 1;
+    flex-direction: column;
+  }
+
+  .record-type {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-bottom: 2px;
+  }
+
+  .record-date {
+    font-size: 11px;
+    color: #484f58;
+  }
+
+  .record-right {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .record-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: #3fb950;
+    font-family: monospace;
+  }
+
+  .record-sync-badge {
+    position: absolute;
+    right: 8px;
+    top: 4px;
+    width: 18px;
+    height: 18px;
+    justify-content: center;
+    align-items: center;
+    background-color: #1a7f4b;
+    border-radius: 9px;
+  }
+
+  .sync-badge-text {
+    font-size: 10px;
+    color: #ffffff;
+    font-weight: 700;
+  }
+
+  .empty-state {
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 0;
+  }
+
+  .empty-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+  }
+
+  .empty-text {
+    font-size: 14px;
+    color: #8b949e;
+    margin-bottom: 4px;
+  }
+
+  .empty-hint {
+    font-size: 11px;
+    color: #484f58;
+  }
+
+  .loading {
+    padding: 20px;
+    align-items: center;
+  }
+
+  .loading-text {
+    font-size: 13px;
+    color: #8b949e;
+  }
+
+  .error {
+    padding: 20px;
+    align-items: center;
+  }
+
+  .error-text {
+    font-size: 13px;
+    color: #f85149;
+  }
+
+  .detail-mask {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+  }
+
+  .detail-panel {
+    width: 80%;
+    padding: 20px;
+    background-color: #21262d;
+    border-radius: 16px;
+    border: 1px solid #30363d;
+    flex-direction: column;
+  }
+
+  .detail-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #e6edf3;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  .detail-row {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #30363d;
+  }
+
+  .detail-key {
+    font-size: 13px;
+    color: #8b949e;
+  }
+
+  .detail-val {
+    font-size: 13px;
+    color: #e6edf3;
+    font-weight: 600;
+  }
+
+  .detail-val.highlight {
+    color: #3fb950;
+    font-size: 15px;
+  }
+
+  .detail-close {
+    margin-top: 16px;
+    padding: 10px 0;
+    background-color: #30363d;
+    border-radius: 10px;
+    align-items: center;
+  }
+
+  .detail-close-text {
+    font-size: 14px;
+    color: #e6edf3;
+  }
+</style>

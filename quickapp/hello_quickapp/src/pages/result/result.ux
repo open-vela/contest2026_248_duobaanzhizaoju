@@ -1,0 +1,312 @@
+<script>
+/**
+ * Xsport Result — 训练完成页（设计稿#8）
+ * ★ 单页紧凑版：466×466 一屏展示，无滚动无截断
+ *
+ * 布局：状态栏30 → 标题行34 → 大数字+徽章 ~100 → 四格统计48 → 上传条36 → 按钮46
+ * 总高控制在 466px 以内
+ */
+var storage = require('@system.storage')
+var router = require('@system.router')
+var fetch = require('@system.fetch')
+
+var TAG = '[Result]'
+
+export default {
+  data: {
+    mainValue: '0',
+    mainUnit: '次',
+    grade: '优秀',
+    gradeColor: '#FF6B35',
+
+    statTime: '--:--',
+    statHr: '--',
+    statMaxHr: '--',
+    statCalories: '0',
+    statScore: '0',
+
+    uploadStatus: 'pending',
+    uploadMsg: '',
+
+    timeStr: '',
+    batteryPercent: 86,
+
+    _resultData: null,
+    _timer: null
+  },
+
+  onInit() {
+    console.log(TAG, 'Result onInit')
+    this._updateTime()
+    this._timer = setInterval(function() { this._updateTime() }.bind(this), 30000)
+
+    storage.get({
+      key: 'last_result',
+      success: function(data) {
+        if (data) {
+          try {
+            var r = JSON.parse(data)
+            this._resultData = r
+            console.log(TAG, '加载结果:', JSON.stringify(r).substring(0, 120))
+
+            if (r.value !== undefined) this.mainValue = String(r.value)
+            if (r.unit) this.mainUnit = r.unit
+
+            if (r.duration) this.statTime = this._formatSec(r.duration)
+            if (r.heartRate) this.statHr = String(r.heartRate)
+            if (r.maxHr) this.statMaxHr = String(r.maxHr)
+            if (r.calories) this.statCalories = String(r.calories)
+            if (r.score) this.statScore = String(Math.round(r.score))
+
+            var scoreNum = parseInt(r.score) || parseInt(this.mainValue) || 0
+            this._setGrade(scoreNum)
+
+            if (r.httpStatus === 'success') {
+              this.uploadStatus = 'success'
+              this.uploadMsg = '已同步'
+            } else if (r.uploaded) {
+              this.uploadStatus = 'success'
+              this.uploadMsg = '已同步'
+            } else {
+              this._doUpload()
+            }
+
+          } catch(e) { console.error(TAG, e) }
+        } else {
+          this.uploadStatus = 'fail'
+          this.uploadMsg = '无数据'
+        }
+      }.bind(this)
+    })
+  },
+
+  onDestroy() {
+    if (this._timer) clearInterval(this._timer)
+  },
+
+  _updateTime() {
+    try {
+      this.timeStr = String(new Date().getHours()).padStart(2,'0') + ':' +
+                     String(new Date().getMinutes()).padStart(2,'0')
+    } catch(e) {}
+  },
+
+  _formatSec(sec) {
+    if (!sec || sec < 0) return '--:--'
+    var m = Math.floor(sec / 60)
+    var s = Math.floor(sec % 60)
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0')
+  },
+
+  _setGrade(score) {
+    score = Math.round(score)
+    if (score >= 90) { this.grade = '优秀'; this.gradeColor = '#00C9A7' }
+    else if (score >= 80) { this.grade = '良好'; this.gradeColor = '#FFB800' }
+    else if (score >= 60) { this.grade = '及格'; this.gradeColor = '#5B9BD5' }
+    else { this.grade = '不及格'; this.gradeColor = '#F85149' }
+  },
+
+  retryUpload() {
+    this._doUpload()
+  },
+
+  _doUpload() {
+    if (!this._resultData) return
+
+    var record = this._resultData
+    var self = this
+
+    this.uploadStatus = 'uploading'
+    this.uploadMsg = '上传中'
+
+    storage.get({
+      key: 'device_id',
+      success: function(devId) {
+        storage.get({
+          key: 'server_url',
+          success: function(serverUrl) {
+            if (!serverUrl) serverUrl = 'http://101.35.231.154:9000'
+            if (!devId) devId = 'unknown'
+
+            var url = serverUrl + '/api/v1/fitness/upload/batch'
+            var bodyData = {
+              device_id: devId,
+              records: [{
+                student_id: record.studentId || '',
+                test_type: record.sportId,
+                test_date: record.timestamp,
+                count: record.value,
+                duration_sec: record.duration,
+                avg_hr: record.heartRate || 0,
+                max_hr: record.maxHr || 0,
+                calories: record.calories || 0,
+                score: record.score || 0,
+                sport_name: record.sportName
+              }]
+            }
+
+            fetch.fetch({
+              url: url,
+              method: 'POST',
+              header: { 'Content-Type': 'application/json' },
+              data: JSON.stringify(bodyData),
+              responseType: 'text',
+              success: function(resp) {
+                console.log(TAG, '上传成功 code:', resp.code)
+                self.uploadStatus = 'success'
+                self.uploadMsg = '已同步'
+                record.uploaded = true
+                storage.set({ key: 'last_result', value: JSON.stringify(record) })
+              },
+              fail: function(err, code) {
+                console.error(TAG, '上传失败 code:', code)
+                self.uploadStatus = 'fail'
+                self.uploadMsg = '失败,点重试'
+              }
+            })
+          }
+        })
+      }
+    })
+  },
+
+  goBackAndCheck() {
+    router.back()
+  },
+
+  retryTest() {
+    router.replace({ uri: '/pages/test' })
+  }
+}
+</script>
+
+<template>
+  <div class="page">
+    <!-- ====== ① 状态栏 30px ====== -->
+    <div class="status-bar">
+      <div class="battery-wrap">
+        <div class="batt-body"><div class="batt-fill" style="width: {{batteryPercent}}%"></div></div>
+        <text class="batt-pct">{{batteryPercent}}%</text>
+      </div>
+      <text class="time-txt">{{timeStr}}</text>
+    </div>
+
+    <!-- ====== ② 标题行 34px ====== -->
+    <div class="title-row">
+      <div class="back-btn" @click="goBackAndCheck"><text class="back-char">&lt;</text></div>
+      <text class="title-txt">训练完成</text>
+      <div class="title-spacer"></div>
+    </div>
+
+    <!-- ====== ③ 大数字 + 徽章 ~100px ====== -->
+    <div class="result-area">
+      <div class="big-row">
+        <text class="big-num">{{mainValue}}</text>
+        <text class="big-unit">{{mainUnit}}</text>
+      </div>
+      <div class="badge-row">
+        <text class="badge" style="color: {{gradeColor}}">{{grade}}</text>
+      </div>
+    </div>
+
+    <!-- ====== ④ 四格统计 48px ====== -->
+    <div class="stat-bar">
+      <div class="stat-cell">
+        <text class="stat-num">{{statTime}}</text>
+        <text class="stat-key">用时</text>
+      </div>
+      <div class="stat-div"></div>
+      <div class="stat-cell">
+        <text class="stat-num">{{statHr}}</text>
+        <text class="stat-key">均心率</text>
+      </div>
+      <div class="stat-div"></div>
+      <div class="stat-cell">
+        <text class="stat-num">{{statMaxHr}}</text>
+        <text class="stat-key">最高心率</text>
+      </div>
+      <div class="stat-div"></div>
+      <div class="stat-cell">
+        <text class="stat-num">{{statScore}}</text>
+        <text class="stat-key">得分</text>
+      </div>
+    </div>
+
+    <!-- ====== ⑤ 上传状态条 36px ====== -->
+    <div class="upload-bar">
+      <text class="upload-dot uploading" show="{{uploadStatus === 'uploading'}}"></text>
+      <text class="upload-dot ok" show="{{uploadStatus === 'success'}}"></text>
+      <text class="upload-dot err" show="{{uploadStatus === 'fail'}}"></text>
+      <text class="upload-txt" show="{{uploadStatus === 'uploading'}}">上传中...</text>
+      <text class="upload-txt ok-txt" show="{{uploadStatus === 'success'}}">{{uploadMsg}}</text>
+      <text class="upload-txt err-txt" show="{{uploadStatus === 'fail'}}">{{uploadMsg}}</text>
+      <div class="retry-btn" show="{{uploadStatus === 'fail'}}" @click="retryUpload">
+        <text class="retry-txt">重试</text>
+      </div>
+    </div>
+
+    <!-- ====== ⑥ 按钮组 46px ====== -->
+    <div class="btn-row">
+      <div class="btn-primary" @click="goBackAndCheck">
+        <text class="btn-w">查看记录</text>
+      </div>
+      <div class="btn-secondary" @click="retryTest">
+        <text class="btn-g">再测</text>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+  /* 总布局：30+34+100+48+36+46 = 294px，宽裕 */
+  .page { width: 466px; height: 466px; flex-direction: column; background-color: #000000; align-items: center; }
+
+  /* ① 状态栏 30px */
+  .status-bar { width: 466px; height: 30px; flex-direction: row; align-items: center; padding-left: 20px; padding-right: 20px; }
+  .battery-wrap { width: 52px; height: 18px; flex-direction: row; align-items: center; }
+  .batt-body { width: 20px; height: 10px; border-radius: 2px; background-color: #222222; border-width: 1px; border-color: #555555; }
+  .batt-fill { height: 8px; min-width: 2px; border-radius: 1px; background-color: #00C9A7; }
+  .batt-pct { font-size: 11px; color: #ffffff; margin-left: 4px; }
+  .time-txt { flex: 1; text-align: center; font-size: 14px; color: #ffffff; }
+
+  /* ② 标题行 34px */
+  .title-row { width: 420px; height: 34px; flex-direction: row; align-items: center; }
+  .back-btn { width: 28px; height: 28px; border-radius: 14px; background-color: #1a1a1a; justify-content: center; align-items: center; }
+  .back-char { font-size: 14px; color: #888888; }
+  .title-txt { flex: 1; text-align: center; font-size: 18px; color: #ffffff; }
+  .title-spacer { width: 28px; }
+
+  /* ③ 大数字 + 徽章 */
+  .result-area { flex-direction: column; align-items: center; margin-top: 16px; }
+  .big-row { flex-direction: row; align-items: baseline; }
+  .big-num { font-size: 48px; color: #ffffff; letter-spacing: 1px; }
+  .big-unit { font-size: 18px; color: #888888; margin-left: 4px; }
+  .badge-row { margin-top: 6px; }
+  .badge { font-size: 14px; }
+
+  /* ④ 四格统计 */
+  .stat-bar { width: 400px; height: 48px; flex-direction: row; align-items: center; justify-content: space-around; margin-top: 16px; border-radius: 12px; background-color: #111111; }
+  .stat-cell { flex-direction: column; align-items: center; }
+  .stat-num { font-size: 15px; color: #ffffff; }
+  .stat-key { font-size: 10px; color: #777777; margin-top: 2px; }
+  .stat-div { width: 1px; height: 24px; background-color: #222222; }
+
+  /* ⑤ 上传状态条 */
+  .upload-bar { width: 360px; height: 36px; flex-direction: row; align-items: center; justify-content: center; margin-top: 14px; border-radius: 18px; background-color: #141414; }
+  .upload-dot { width: 8px; height: 8px; border-radius: 4px; margin-right: 8px; }
+  .uploadting { background-color: #FFB800; }
+  .ok { background-color: #00C9A7; }
+  .err { background-color: #F85149; }
+  .upload-txt { font-size: 12px; color: #ffffff; }
+  .ok-txt { color: #00C9A7; }
+  .err-txt { color: #F85149; }
+  .retry-btn { width: 42px; height: 24px; border-radius: 12px; background-color: #FF6B35; justify-content: center; align-items: center; margin-left: 10px; }
+  .retry-txt { font-size: 11px; color: #ffffff; }
+
+  /* ⑥ 按钮组 */
+  .btn-row { width: 320px; height: 46px; flex-direction: row; justify-content: space-between; margin-top: 18px; }
+  .btn-primary { width: 150px; height: 42px; border-radius: 21px; background-color: #FF6B35; justify-content: center; align-items: center; }
+  .btn-w { font-size: 15px; color: #ffffff; }
+  .btn-secondary { width: 150px; height: 42px; border-radius: 21px; background-color: #1a1a1a; justify-content: center; align-items: center; border-width: 1px; border-color: #333333; }
+  .btn-g { font-size: 15px; color: #cccccc; }
+</style>
