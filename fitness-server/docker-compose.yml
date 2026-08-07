@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  # PostgreSQL 数据库
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fitness
+      POSTGRES_PASSWORD: fitness123
+      POSTGRES_DB: fitness_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fitness -d fitness_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  # MQTT Broker
+  emqx:
+    image: emqx/emqx:5.4
+    ports:
+      - "1883:1883"
+      - "8083:8083"
+      - "8084:8084"
+      - "18083:18083"
+    environment:
+      EMQX_NAME: fitness-emqx
+      EMQX_HOST: 127.0.0.1
+
+  # 后端API
+  server:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: fitness
+      POSTGRES_PASSWORD: fitness123
+      POSTGRES_DB: fitness_db
+      REDIS_HOST: redis
+      MQTT_HOST: emqx
+      MQTT_PORT: "1883"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      emqx:
+        condition: service_started
+    volumes:
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+    restart: unless-stopped
+
+volumes:
+  pgdata:
