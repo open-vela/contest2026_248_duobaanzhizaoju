@@ -1,0 +1,92 @@
+/* 全局样式 */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #333; }
+
+/* 登录页 */
+.login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.login-card { background: #fff; padding: 40px; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; width: 400px; }
+.login-card h1 { font-size: 24px; margin-bottom: 8px; }
+.login-card p { color: #888; margin-bottom: 30px; }
+.login-card form { display: flex; flex-direction: column; gap: 16px; }
+.login-card input { padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; transition: border 0.3s; }
+.login-card input:focus { border-color: #667eea; outline: none; }
+.login-card button { padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: opacity 0.3s; }
+.login-card button:hover { opacity: 0.9; }
+.login-hint { margin-top: 20px; color: #aaa; font-size: 14px; }
+
+/* 主界面布局 */
+.app-container { display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1e1e2d; color: #fff; display: flex; flex-direction: column; position: fixed; height: 100vh; }
+.sidebar-header { padding: 20px; border-bottom: 1px solid #2a2a3d; display: flex; align-items: center; justify-content: space-between; }
+.sidebar-header h2 { font-size: 18px; }
+.sidebar nav { flex: 1; padding: 12px 0; }
+.nav-item { display: block; padding: 12px 24px; color: #a0a0b8; text-decoration: none; transition: all 0.2s; }
+.nav-item:hover { background: #2a2a3d; color: #fff; }
+.nav-item.active { background: #667eea; color: #fff; }
+.nav-admin { color: #ffd700; }
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid #2a2a3d; font-size: 14px; }
+.sidebar-footer button { margin-top: 8px; padding: 6px 12px; background: #444; color: #ccc; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
+
+.content { flex: 1; margin-left: 220px; padding: 24px 32px; }
+
+/* 页面切换 */
+.page { display: none; }
+.page.active { display: block; }
+.page h2 { margin-bottom: 20px; font-size: 22px; }
+.page-desc { color: #888; margin-bottom: 16px; font-size: 14px; }
+
+/* 角色徽章 */
+.role-badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.role-admin { background: #ffd700; color: #1e1e2d; }
+.role-teacher { background: #52c41a; color: #fff; }
+
+/* 统计卡片 */
+.stats-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.stat-icon { font-size: 14px; color: #888; }
+.stat-val { font-size: 32px; font-weight: 700; color: #667eea; }
+.stat-label { color: #888; font-size: 14px; }
+
+/* 图表容器 */
+.chart-container { background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-top: 16px; }
+.chart-container h3 { margin-bottom: 16px; }
+
+/* 工具栏 */
+.toolbar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.toolbar input, .toolbar select { padding: 8px 12px; border: 1px solid #d0d0d0; border-radius: 6px; font-size: 14px; }
+.toolbar button { padding: 8px 16px; background: #667eea; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+.toolbar button:hover { opacity: 0.9; }
+
+/* 数据表格 */
+.data-table { width: 100%; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-collapse: collapse; }
+.data-table th { background: #f5f6fa; padding: 12px 16px; text-align: left; font-weight: 600; font-size: 14px; color: #555; border-bottom: 2px solid #e8e8e8; }
+.data-table td { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+.data-table tr:hover { background: #f9f9fc; }
+.grade-excellent { color: #e6a700; font-weight: 600; }
+.grade-good { color: #52c41a; font-weight: 600; }
+.grade-pass { color: #1890ff; }
+.grade-fail { color: #f5222d; }
+
+/* 模态框 */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background: #fff; padding: 32px; border-radius: 12px; width: 680px; max-width: 95vw; max-height: 90vh; overflow-y: auto; position: relative; }
+.modal-close { position: absolute; top: 12px; right: 16px; font-size: 24px; cursor: pointer; color: #999; }
+.modal-content h3 { margin-bottom: 20px; }
+.modal-content label { display: block; margin: 12px 0 4px; font-size: 14px; color: #555; }
+.modal-content input, .modal-content select { width: 100%; padding: 10px; border: 1px solid #d0d0d0; border-radius: 6px; font-size: 14px; }
+.modal-content button { margin-top: 20px; padding: 12px 24px; background: #667eea; color: #fff; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; }
+
+/* 统计结果 */
+.stat-result { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px; }
+.stat-result-card { background: #fff; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.stat-result-card .label { color: #888; font-size: 14px; margin-bottom: 4px; }
+.stat-result-card .value { font-size: 28px; font-weight: 700; color: #667eea; }
+
+/* 排行榜 */
+.rank-1 { color: #faad14; font-weight: 700; }
+.rank-2 { color: #8c8c8c; font-weight: 700; }
+.rank-3 { color: #d48806; font-weight: 700; }
+
+/* 教师绑定管理 */
+.bind-section { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.bind-section h3 { margin-bottom: 16px; font-size: 16px; color: #333; }
