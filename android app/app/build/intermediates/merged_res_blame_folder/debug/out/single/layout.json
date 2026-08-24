@@ -1,0 +1,110 @@
+[
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\activity_main.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\fragment_admin_home.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\fragment_admin_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\activity_admin_home.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_admin_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\activity_teacher_home.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_teacher_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\activity_teacher_management.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_teacher_management.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\fragment_profile.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\fragment_profile.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\activity_report_export.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_report_export.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\item_test_row.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\item_test_row.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\item_star_row.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\item_star_row.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\activity_student_detail.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_student_detail.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\fragment_statistics.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\fragment_statistics.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\activity_student_list.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_student_list.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\item_class_row.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\item_class_row.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\dialog_teacher_edit.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\dialog_teacher_edit.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\activity_class_statistics.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_class_statistics.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\activity_login.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_login.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\activity_device_management.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_device_management.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\activity_ai_report.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_ai_report.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\item_teacher_row.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\item_teacher_row.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\item_student.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\item_student.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\fragment_home.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\fragment_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\fragment_students.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\fragment_students.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\activity_class_management.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_class_management.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\item_device_row.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\item_device_row.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-mergeDebugResources-39:\\layout\\activity_profile.xml",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_profile.xml"
+    },
+    {
+        "merged": "com.fitness.management.app-mergeDebugResources-39:/layout/activity_admin_home.xml",
+        "source": "com.fitness.management.app-main-42:/layout/activity_admin_home.xml"
+    },
+    {
+        "merged": "com.fitness.management.app-mergeDebugResources-39:/layout/fragment_admin_home.xml",
+        "source": "com.fitness.management.app-main-42:/layout/fragment_admin_home.xml"
+    }
+]

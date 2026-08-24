@@ -1,0 +1,362 @@
+[
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_fragment_statistics.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\fragment_statistics.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_activity_report_export.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_report_export.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_activity_student_detail.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_student_detail.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_search.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_search.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_btn_primary.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_btn_primary.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_item_teacher_row.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\item_teacher_row.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_launcher_foreground.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_dot_fail.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\dot_fail.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_fragment_students.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\fragment_students.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_circle_green.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_circle_green.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_dot_purple.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_dot_purple.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_arrow_back.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_arrow_back.xml"
+    },
+    {
+        "merged": "com.fitness.management.app-merged_res-40:/drawable_bg_score_blue.xml.flat",
+        "source": "com.fitness.management.app-main-42:/drawable/bg_score_blue.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_activity_class_statistics.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_class_statistics.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_eye.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_eye.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_score_green.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_score_green.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_badge_rank_second_bg.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\badge_rank_second_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_dot_excellent.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\dot_excellent.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_item_device_row.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\item_device_row.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_activity_class_management.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_class_management.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_nav_active_bg.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\nav_active_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_profile.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_profile.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_dot_blue.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_dot_blue.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_dot_orange.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_dot_orange.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\mipmap-anydpi-v26\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_tab_active.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_tab_active.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_nav_pill.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_nav_pill.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_grade_orange.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_grade_orange.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_dot_pass.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\dot_pass.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_person.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_person.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_activity_admin_home.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_admin_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_tab_selector.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_tab_selector.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_fragment_admin_home.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\fragment_admin_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_score_red.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_score_red.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_avatar_blue.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_avatar_blue.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_bottom_nav.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_bottom_nav.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_score_blue.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_score_blue.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_circle_admin_bg.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\circle_admin_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_badge_rank_third_bg.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\badge_rank_third_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_badge_func_orange_bg.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\badge_func_orange_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_stats_active.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_stats_active.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_eye_off.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_eye_off.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_circle_male_bg.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\circle_male_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_activity_teacher_home.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_teacher_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_badge_rank_first_bg.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\badge_rank_first_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_tab_selector_inactive.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_tab_selector_inactive.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_dot_green.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_dot_green.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_circle_female_bg.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\circle_female_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_activity_teacher_management.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_teacher_management.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_activity_device_management.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_device_management.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_item_test_row.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\item_test_row.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_fragment_home.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\fragment_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_badge_func_green_bg.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\badge_func_green_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_home_active.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_home_active.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_home.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_gradient_blue.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_gradient_blue.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_score_orange.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_score_orange.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_grade_red.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_grade_red.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_activity_profile.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_profile.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_activity_student_list.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_student_list.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_nav_pill_active.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_nav_pill_active.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_grade_badge.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_grade_badge.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_activity_login.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_login.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_server.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_server.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_person_active.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_person_active.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_dialog_teacher_edit.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\dialog_teacher_edit.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_profile_active.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_profile_active.xml"
+    },
+    {
+        "merged": "com.fitness.management.app-merged_res-40:/drawable_bg_score_badge.xml.flat",
+        "source": "com.fitness.management.app-main-42:/drawable/bg_score_badge.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_activity_ai_report.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_ai_report.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_grade_green.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_grade_green.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_fragment_profile.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\fragment_profile.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_pill_dark.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_pill_dark.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_dot_good.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\dot_good.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_item_star_row.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\item_star_row.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\mipmap-anydpi-v26\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_stats.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_stats.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_badge_class_bg.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\badge_class_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_lock.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_lock.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_run.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_run.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_avatar_circle.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_avatar_circle.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_score_badge.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_score_badge.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_item_class_row.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\item_class_row.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_score_gray.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_score_gray.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_ic_launcher_background.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\ic_launcher_background.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_badge_func_blue_bg.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\badge_func_blue_bg.xml"
+    },
+    {
+        "merged": "com.fitness.management.app-merged_res-40:/drawable_bg_avatar_circle.xml.flat",
+        "source": "com.fitness.management.app-main-42:/drawable/bg_avatar_circle.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_badge_func_purple_bg.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\badge_func_purple_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\drawable_bg_grade_blue.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\drawable\\bg_grade_blue.xml"
+    },
+    {
+        "merged": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-merged_res-40:\\layout_item_student.xml.flat",
+        "source": "C:\\Users\\n002520\\.gradle\\daemon\\8.5\\com.fitness.management.app-main-42:\\layout\\item_student.xml"
+    }
+]
