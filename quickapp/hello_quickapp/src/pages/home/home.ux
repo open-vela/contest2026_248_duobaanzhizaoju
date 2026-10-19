@@ -1,141 +1,159 @@
 <script>
-  /**
-   * Xsport Home — 体测训练首页
-   * ★ 单页紧凑版：466×466 圆屏适配，去掉时间显示
-   */
-  import { TEST_TYPES, SPORT_COLORS } from '../../common/constants'
-  var storage = require('@system.storage')
-  var router = require('@system.router')
+/**
+ * Xsport Home — 表盘首页（原型 #1）
+ * 480×480 圆屏：日期 + 红色心率环大时钟 + 今日体测 + 心率标注
+ * + 步数/千卡/评分 + 三快捷图标（运动/历史/勋章）
+ */
+var storage = require('@system.storage')
+var router = require('@system.router')
 
-  var TAG = '[Home]'
+var TAG = '[Home]'
+var WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+function pad(n) { return String(n).padStart(2, '0') }
 
-  export default {
-    data: {
-      sports: [],
-      batteryPercent: 86,
-      iconMap: {
-        jump_rope: '绳', '50m_run': '50', '800m_run': '8',
-        '1000m_run': '千', long_jump: '远', sit_ups: '仰',
-        pull_up: '引', sit_reach: '坐'
+export default {
+  data: {
+    dateStr: '',
+    timeStr: '08:30',
+    steps: 6234,
+    kcal: 32,
+    score: 86,
+    heartRate: 142,
+    todayText: '今日体测 跳绳 128次',
+    batteryPercent: 86
+  },
+
+  onInit() {
+    this._updateClock()
+    this._timer = setInterval(function () { this._updateClock() }.bind(this), 10000)
+    this._loadToday()
+  },
+
+  onDestroy() {
+    if (this._timer) clearInterval(this._timer)
+  },
+
+  _updateClock() {
+    try {
+      var d = new Date()
+      this.dateStr = (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + WEEK[d.getDay()]
+      this.timeStr = pad(d.getHours()) + ':' + pad(d.getMinutes())
+    } catch (e) {}
+  },
+
+  _loadToday() {
+    var self = this
+    storage.get({
+      key: 'history_records',
+      success: function (data) {
+        if (!data) return
+        try {
+          var list = JSON.parse(data)
+          var now = new Date()
+          var start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+          var latest = null, sum = 0, n = 0
+          for (var i = 0; i < list.length; i++) {
+            var t = new Date(list[i].timestamp).getTime()
+            if (t >= start) {
+              if (!latest || t > new Date(latest.timestamp).getTime()) latest = list[i]
+              sum += (list[i].score || 0); n++
+            }
+          }
+          if (latest) {
+            var v = latest.mode === 'distance' ? (latest.value || 0) : Math.round(latest.value || latest.count || 0)
+            self.todayText = '今日体测 ' + (latest.sportName || latest.sportId || '体测') + ' ' + v + (latest.unit || '次')
+          }
+          if (n > 0) self.score = Math.round(sum / n)
+        } catch (e) {}
       }
-    },
+    })
+  },
 
-    onInit() {
-      this.sports = TEST_TYPES || []
-    },
-
-    _getColor(id) { return SPORT_COLORS[id] || '#FF6B35' },
-    _getIconChar(id) { return this.iconMap[id] || '?' },
-
-    openSport(item) {
-      console.log(TAG, '选择运动:', item.id)
-      router.push({
-        uri: '/pages/sport',
-        params: { sportData: JSON.stringify(item) }
-      })
-      storage.set({ key: 'current_test', value: JSON.stringify(item) })
-    },
-
-    goRecent() {
-      router.push({ uri: '/pages/recent' })
-    },
-
-    goReport() {
-      router.push({ uri: '/pages/report' })
-    },
-
-    goSettings() {
-      router.push({ uri: '/pages/settings' })
-    }
-  }
+  openSport() { router.push({ uri: '/pages/sport' }) },
+  openHistory() { router.push({ uri: '/pages/history' }) },
+  openBadges() { router.push({ uri: '/pages/badges' }) },
+  openReport() { router.push({ uri: '/pages/report' }) }
+}
 </script>
 
 <template>
   <div class="page">
-    <!-- ====== 电池状态栏（仅电池，无时间） ====== -->
-    <div class="status-bar">
-      <div class="battery-wrap">
-        <div class="batt-body"><div class="batt-fill" style="width: {{batteryPercent}}%"></div></div>
-        <text class="batt-pct">{{batteryPercent}}%</text>
+    <!-- 日期 -->
+    <text class="date">{{dateStr}}</text>
+
+    <!-- 蓝牙 + 电量 -->
+    <div class="status-icons">
+      <image class="bt-img" src="/common/assets/ic_bt.png"></image>
+      <div class="batt-body"><div class="batt-fill" style="width: {{batteryPercent}}%"></div></div>
+    </div>
+
+    <!-- 心率环 -->
+    <image class="ring-img" src="/common/assets/ring_red.png"></image>
+
+    <!-- 环内时钟 + 今日体测 -->
+    <text class="clock">{{timeStr}}</text>
+    <text class="today">{{todayText}}</text>
+
+    <!-- 环外两侧：心率 -->
+    <text class="hr-label">心率</text>
+    <text class="hr-val">{{heartRate}}bpm</text>
+
+    <!-- 步数 / 千卡 / 评分 -->
+    <div class="metrics" @click="openReport">
+      <div class="m-col">
+        <text class="m-num">{{steps}}</text>
+        <text class="m-key">步数</text>
+      </div>
+      <div class="m-col">
+        <text class="m-num">{{kcal}}</text>
+        <text class="m-key">千卡</text>
+      </div>
+      <div class="m-col">
+        <text class="m-num m-gold">{{score}}</text>
+        <text class="m-key">评分</text>
       </div>
     </div>
 
-    <!-- ====== 标题区 ====== -->
-    <div class="head-area">
-      <text class="title-main">运动</text>
-    </div>
-
-    <!-- ====== 运动列表 ====== -->
-    <div class="list-area">
-      <div class="row" for="{{sports}}" @click="openSport($item)">
-        <div class="icon-circle" style="background-color: {{_getColor($item.id)}}">
-          <text class="icon-ch">{{_getIconChar($item.id)}}</text>
-        </div>
-        <div class="info-col">
-          <text class="name-txt">{{$item.label}}</text>
-        </div>
-      </div>
-
-      <div class="row recent-row" @click="goRecent">
-        <div class="icon-circle recent-bg"><text class="icon-ch">录</text></div>
-        <div class="info-col">
-          <text class="name-txt">最近记录</text>
-        </div>
-      </div>
-
-      <div class="row report-row" @click="goReport">
-        <div class="icon-circle report-bg"><text class="icon-ch">AI</text></div>
-        <div class="info-col">
-          <text class="name-txt">AI 报告</text>
-        </div>
-      </div>
-
-      <div class="row settings-row" @click="goSettings">
-        <div class="icon-circle gear-bg"><text class="icon-ch">*</text></div>
-        <div class="info-col">
-          <text class="name-txt">设置</text>
-        </div>
-      </div>
+    <!-- 三快捷图标 -->
+    <div class="icons">
+      <image class="ic" src="/common/assets/ic_run.png" @click="openSport"></image>
+      <image class="ic" src="/common/assets/ic_heart.png" @click="openHistory"></image>
+      <image class="ic" src="/common/assets/ic_medal.png" @click="openBadges"></image>
     </div>
   </div>
 </template>
 
 <style>
-  .page {
-    width: 466px; height: 466px;
-    flex-direction: column;
-    background-color: #000000;
-    align-items: center;
-  }
+  .page { width: 480px; height: 480px; background-color: #000000; }
 
-  /* ====== 电池栏 ====== */
-  .status-bar { width: 466px; height: 24px; flex-direction: row; align-items: center; justify-content: center; padding-top: 6px; }
-  .battery-wrap { width: 44px; height: 16px; flex-direction: row; align-items: center; }
-  .batt-body { width: 18px; height: 9px; border-radius: 2px; background-color: #222222; border-width: 1px; border-color: #555555; }
-  .batt-fill { height: 7px; min-width: 2px; border-radius: 1px; background-color: #00C9A7; }
-  .batt-pct { font-size: 10px; color: #cccccc; margin-left: 3px; }
+  /* 日期 */
+  .date { position: absolute; left: 0; top: 18px; width: 480px; text-align: center; font-size: 22px; color: #ffffff; }
 
-  /* ====== 标题区 ====== */
-  .head-area { width: 466px; height: 36px; flex-direction: row; align-items: center; justify-content: center; margin-top: 8px; }
-  .title-main { font-size: 22px; color: #ffffff; }
+  /* 蓝牙 + 电量（右上） */
+  .status-icons { position: absolute; right: 36px; top: 58px; flex-direction: row; align-items: center; }
+  .bt-img { width: 24px; height: 24px; margin-right: 10px; }
+  .batt-body { width: 26px; height: 12px; border-radius: 3px; background-color: #1C1C1E; border-width: 1px; border-color: #8E8E93; }
+  .batt-fill { height: 10px; min-width: 2px; border-radius: 2px; background-color: #ffffff; }
 
-  /* ====== 运动列表 ====== */
-  .list-area { width: 420px; flex-direction: column; align-items: center; margin-top: 16px; }
-  .row {
-    width: 400px; height: 64px;
-    flex-direction: row; align-items: center;
-    padding-left: 28px; padding-right: 28px;
-    margin-bottom: 10px; border-radius: 26px;
-    background-color: #252525;
-  }
-  .settings-row { background-color: #222222; }
-  .recent-row { background-color: #1a2a1a; }
-  .recent-bg { background-color: #2a3a2a; }
-  .report-row { background-color: #2a1605; }
-  .report-bg { background-color: #FF6B35; }
-  .icon-circle { width: 48px; height: 48px; border-radius: 18px; justify-content: center; align-items: center; margin-right: 14px; }
-  .gear-bg { background-color: #333333; }
-  .icon-ch { font-size: 24px; color: #ffffff; }
-  .info-col { flex: 1; flex-direction: column; justify-content: center; }
-  .name-txt { font-size: 16px; color: #ffffff; text-align: left; }
+  /* 心率环（红） */
+  .ring-img { position: absolute; left: 100px; top: 74px; width: 280px; height: 280px; }
+
+  /* 环内时钟（视觉中心对准环心 y=214） */
+  .clock { position: absolute; left: 0; top: 162px; width: 480px; text-align: center; font-size: 76px; color: #ffffff; font-weight: 300; }
+  .today { position: absolute; left: 0; top: 46px; width: 480px; text-align: center; font-size: 18px; color: #2DD4BF; }
+
+  /* 环外两侧（上移避开圆环最宽处） */
+  .hr-label { position: absolute; left: 42px; top: 128px; font-size: 20px; color: #ffffff; }
+  .hr-val { position: absolute; right: 36px; top: 128px; font-size: 20px; color: #ffffff; }
+
+  /* 步数 / 千卡 / 评分 */
+  .metrics { position: absolute; left: 20px; top: 342px; width: 440px; flex-direction: row; justify-content: space-around; }
+  .m-col { flex-direction: column; align-items: center; width: 120px; }
+  .m-num { font-size: 28px; color: #ffffff; }
+  .m-gold { color: #FFD54A; }
+  .m-key { font-size: 15px; color: #9A9AA0; margin-top: 2px; }
+
+  /* 三快捷图标（贴底锚定，保证不出屏） */
+  .icons { position: absolute; left: 0; bottom: 14px; width: 480px; flex-direction: row; justify-content: center; }
+  .ic { width: 32px; height: 32px; margin: 0 26px; }
 </style>

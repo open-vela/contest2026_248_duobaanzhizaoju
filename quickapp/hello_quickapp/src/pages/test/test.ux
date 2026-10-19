@@ -1,9 +1,13 @@
 <script>
+import CounterAlgo from '../../common/counter_algo'
 /**
- * Xsport Test — 运动训练中
- * ★ 单页紧凑版：466×466 一屏展示
- * ★ 跑步模式：显示距离(m)+用时+配速
- * ★ 计数模式：显示计数值+剩余倒计时
+ * Xsport Test — 运动训练中（原型 #3/4/9/10/11/12）
+ * 480×480 圆屏，六种版式：
+ *   count  跳绳(用时) / 仰卧起坐(剩余时间+保持节奏) / 引体向上(力量%+第N组)
+ *   time   800/1000米跑(距离+配速+心率+步/千卡/区间)
+ *   sprint 50米跑(秒表+步频+等待起航)
+ *   distance 立定跳远(最佳成绩+腾空秒+本次徽章+第N跳)
+ * 通用：顶部项目名+右上时间，底部 暂停/停止 圆钮
  */
 var storage = require('@system.storage')
 var router = require('@system.router')
@@ -11,135 +15,230 @@ var fetch = require('@system.fetch')
 
 var TAG = '[Test]'
 
+function pad(n) { return String(n).padStart(2, '0') }
+function fmtSec(sec) {
+  sec = Math.max(0, Math.floor(sec))
+  return pad(Math.floor(sec / 60)) + ':' + pad(sec % 60)
+}
+
 export default {
   data: {
-    sportName: '',
-    sportId: '',
-    mode: 'count',
-    unit: '次',
+    sportName: '', sportId: '', mode: 'count', unit: '次',
 
-    /* 计数模式数据 */
-    countValue: 0,
-    timeLeft: 60,
-    totalTime: 60,
-    isRunning: true,
-    isFinished: false,
+    /* 通用 */
+    isRunning: true, isFinished: false,
+    sessionText: '00:00',
+    heartRate: 120, calories: 0,
+    tipText: '', setLine: '',
+    rightNum: '00:00', rightKey: '用时',
 
-    /* 跑步模式数据 */
-    runDistance: 0,       // 当前跑的距离(米)
-    runElapsed: 0,       // 已用时间(秒)
-    runPace: '--',        // 配速(分/公里)
+    /* 计数 */
+    countValue: 0, timeLeft: 60,
 
-    heartRate: 145,
-    calories: 0,
+    /* 跑步 */
+    runKm: '0.00', runPace: "--'--\"", runSteps: 0, runZone: '有氧区间',
+
+    /* 冲刺 50 米 */
+    sprintText: '00.00', sprintCadence: 0, sprintStatus: '准备就绪',
+
+    /* 立定跳远 */
+    jumpBest: '0.00', jumpLast: '0.00', jumpAir: '0.00', jumpNo: 0,
 
     batteryPercent: 86,
 
-    _tickTimer: null,
-    _hrSum: 0,
-    _hrCount: 0,
-    _maxHr: 0
+    /* 内部 */
+    _tickTimer: null, _elapsed: 0, _wait: 3,
+    _dist: 0, _sprintDist: 0,
+    _hrSum: 0, _hrCount: 0, _maxHr: 0,
+    _lastJumpTick: 0,
+
+    /* 算法（仰卧起坐/引体向上真实计数） */
+    _algo: null, _sampleTimer: null, _sensor: null,
+    _sensorSubscribed: false, _accel: { x: 0, y: 0, z: 0 }, _simMs: 0,
+
+    /* 立定跳远：手动输入成绩 */
+    jumpInput: '', jumpSubmitted: false
   },
 
   onInit() {
     storage.get({
       key: 'current_test',
-      success: function(data) {
-        if (data) {
-          try {
-            var item = JSON.parse(data)
-            this.sportName = item.label || ''
-            this.sportId = item.id || ''
-            this.mode = item.mode || 'count'
-            this.unit = item.unit || '次'
+      success: function (data) {
+        if (!data) return
+        try {
+          var item = JSON.parse(data)
+          this.sportName = item.label || '体测'
+          this.sportId = item.id || ''
+          this.mode = item.mode || 'count'
+          this.unit = item.unit || '次'
+          if (item.duration) this.timeLeft = item.duration
 
-            if (item.duration) {
-              this.timeLeft = item.duration
-              this.totalTime = item.duration
-            }
+          if (this.sportId === 'sit_ups') { this.rightKey = '剩余时间'; this.tipText = '保持节奏'; this.rightNum = fmtSec(this.timeLeft) }
+          else if (this.sportId === 'pull_up') { this.rightKey = '力量'; this.tipText = '向上拉'; this.rightNum = '0%' }
+          else { this.rightKey = '用时'; this.rightNum = '00:00' }
 
-            console.log(TAG, '训练开始:', this.sportName, '模式:', this.mode)
-            this._startTraining()
-          } catch(e) { console.error(TAG, e) }
-        }
+          console.log(TAG, '训练开始:', this.sportName, this.mode)
+          this._initAlgo()
+          this._startSampling()
+          this._start()
+        } catch (e) { console.error(TAG, e) }
       }.bind(this)
     })
   },
 
-  onDestroy() {
-    this._stopAllTimers()
+  onDestroy() { this._stopAllTimers(); this._stopSampling() },
+
+  _start() {
+    var self = this
+    this._tickTimer = setInterval(function () {
+      if (self.isFinished) return
+      if (self.isRunning) self._tick()
+    }, 1000)
   },
 
-  _startTraining() {
+  /* ===== 仰卧起坐 / 引体向上 真实计数算法接线 ===== */
+
+  _initAlgo() {
+    if (this.sportId === 'sit_ups') this._algo = CounterAlgo.createSitUp()
+    else if (this.sportId === 'pull_up') this._algo = CounterAlgo.createPullUp()
+    else this._algo = null
+  },
+
+  _pushSample(ax, ay, az, tMs) {
+    if (!this._algo || !this.isRunning || this.isFinished) return
+    this._algo.feedImu(ax, ay, az, tMs)
+  },
+
+  _startSampling() {
+    if (!this._algo) return
     var self = this
-    this._tickTimer = setInterval(function() {
-      if (!self.isRunning || self.isFinished) return
-
-      if (self.mode === 'time') {
-        /* ====== 跑步模式：计时向上 ====== */
-        self.runElapsed++
-
-        // 目标距离（米）
-        var targetDist = 50
-        if (self.sportId === '800m_run') targetDist = 800
-        else if (self.sportId === '1000m_run') targetDist = 1000
-
-        // 模拟距离增长（3.5~5 m/s），到达目标后自动停止
-        var metersPerSec = 3.5 + Math.random() * 1.5
-        self.runDistance = Math.round(self.runDistance + metersPerSec)
-        if (self.runDistance >= targetDist) {
-          self.runDistance = targetDist
-          // 配速：分钟/公里
-          var paceMin = (self.runElapsed / 60) / (self.runDistance / 1000)
-          self.runPace = Math.floor(paceMin) + "'" +
-            String(Math.round((paceMin - Math.floor(paceMin)) * 60)).padStart(2, '0') + '"'
-          self.calories = Math.round(self.runElapsed * 0.18)
-          var hr = 155 + Math.floor(Math.random() * 20)
-          self.heartRate = hr; self._hrSum += hr; self._hrCount++
-          if (hr > self._maxHr) { self._maxHr = hr }
-          console.log(TAG, '到达' + targetDist + '米，自动结束')
-          self.finishTraining()
-          return
-        }
-
-        // 配速：分钟/公里
-        if (self.runDistance > 10) {
-          var paceMin2 = (self.runElapsed / 60) / (self.runDistance / 1000)
-          self.runPace = Math.floor(paceMin2) + "'" +
-            String(Math.round((paceMin2 - Math.floor(paceMin2)) * 60)).padStart(2, '0') + '"'
-        }
-
-        self.calories = Math.round(self.runElapsed * 0.18)
-
-        // 模拟心率（跑步时更高）
-        var hr2 = 155 + Math.floor(Math.random() * 20)
-        self.heartRate = hr2
-        self._hrSum += hr2
-        self._hrCount++
-        if (hr2 > self._maxHr) { self._maxHr = hr2 }
-
-      } else {
-        /* ====== 计数模式：倒计时向下 ====== */
-        if (self.timeLeft > 0) {
-          self.timeLeft--
-
-          if (self.mode === 'count') {
-            self.countValue += Math.floor(Math.random() * 3) + 1
+    /* 优先尝试真实传感器 @system.sensor（OpenVela 若支持） */
+    try {
+      var sensor = require('@system.sensor')
+      if (sensor && sensor.subscribe) {
+        this._sensor = sensor
+        sensor.subscribe({
+          type: 'accelerometer',
+          interval: 20,
+          callback: function (d) {
+            if (d && d.x !== undefined) {
+              /* 兼容 m/s^2 与 g 两种单位：量级偏大则换算为 g */
+              var k = (Math.abs(d.x) + Math.abs(d.y) + Math.abs(d.z) > 12) ? (1 / 9.81) : 1
+              self._pushSample(d.x * k, d.y * k, d.z * k, Date.now())
+            }
           }
-
-          var hr = 140 + Math.floor(Math.random() * 25)
-          self.heartRate = hr
-          self._hrSum += hr
-          self._hrCount++
-          if (hr > self._maxHr) { self._maxHr = hr }
-
-          self.calories = Math.round(self.countValue * 0.15)
-        } else {
-          console.log(TAG, '时间到，自动结束训练')
-          self.finishTraining()
-        }
+        })
+        this._sensorSubscribed = true
+        console.log(TAG, '已订阅真实 IMU，使用传感器计数')
+        return
       }
-    }, 1000)
+    } catch (e) {
+      console.log(TAG, 'sensor 不可用，回退仿真信号:', e)
+    }
+    /* 兜底：内置仿真信号发生器（与 native 仿真一致），50Hz 驱动算法 */
+    this._sensorSubscribed = false
+    this._simMs = 0
+    this._sampleTimer = setInterval(function () {
+      if (!self.isRunning || self.isFinished || !self._algo) return
+      var t = self._simMs
+      var ax = 0, ay = 0, az = 0
+      if (self.sportId === 'sit_ups') {
+        var w = 2 * Math.PI * 0.78 * t / 1000
+        var pitch = (35 + 33 * Math.sin(w)) * Math.PI / 180
+        ay = -Math.sin(pitch)
+        az = Math.cos(pitch)
+      } else {
+        var w2 = 2 * Math.PI * 0.20 * t / 1000
+        az = 1.0 + 0.62 * Math.sin(w2)
+      }
+      self._pushSample(ax, ay, az, t)
+      self._simMs += 20
+    }, 20)
+  },
+
+  _stopSampling() {
+    if (this._sampleTimer) { clearInterval(this._sampleTimer); this._sampleTimer = null }
+    if (this._sensor && this._sensorSubscribed && this._sensor.unsubscribe) {
+      try { this._sensor.unsubscribe({ type: 'accelerometer' }) } catch (e) {}
+    }
+    this._sensorSubscribed = false
+  },
+
+  _submitJump() {
+    if (this.isFinished || this.jumpSubmitted) return
+    var raw = parseFloat(this.jumpInput)
+    if (!(raw > 0)) { this.tipText = '请输入有效成绩'; return }
+    /* 输入 >=10 视为厘米，否则为米 */
+    var meters = raw >= 10 ? raw / 100 : raw
+    this.jumpBest = meters.toFixed(2)
+    this.jumpSubmitted = true
+    this.rightKey = '测量'
+    this.rightNum = '已录入'
+    this.finishTraining()
+  },
+
+  _onJumpInput(e) {
+    this.jumpInput = (e && (e.value !== undefined ? e.value : e.text)) || ''
+  },
+
+  _tick() {
+    this._elapsed++
+    this.sessionText = fmtSec(this._elapsed)
+
+    /* 心率模拟 */
+    var hr = 120 + Math.floor(Math.random() * 40)
+    this.heartRate = hr
+    this._hrSum += hr; this._hrCount++
+    if (hr > this._maxHr) this._maxHr = hr
+
+    if (this.mode === 'count') {
+      if (this.sportId === 'sit_ups') {
+        this.timeLeft--
+        if (this._algo) this.countValue = this._algo.getCount()
+        this.rightNum = fmtSec(this.timeLeft)
+        this.calories = Math.round(this.countValue * 0.3)
+        if (this.timeLeft <= 0) { this.finishTraining(); return }
+      } else if (this.sportId === 'pull_up') {
+        this.timeLeft--
+        if (this._algo) this.countValue = this._algo.getCount()
+        this.rightNum = Math.min(100, this.countValue * 6) + '%'
+        this.setLine = '第' + (1 + Math.min(2, Math.floor(this.countValue / 5))) + '组'
+        this.calories = Math.round(this.countValue * 0.8)
+        if (this.timeLeft <= 0) { this.finishTraining(); return }
+      } else {
+        /* 跳绳 */
+        this.countValue += 1 + Math.floor(Math.random() * 2)
+        this.rightNum = fmtSec(this._elapsed)
+        this.calories = Math.round(this.countValue * 0.15)
+      }
+    } else if (this.sportId === '50m_run') {
+      /* 冲刺 */
+      if (this._wait > 0) {
+        this._wait--
+        this.sprintStatus = this._wait > 0 ? '等待起航' : '冲刺中'
+      } else {
+        this._sprintDist += 3.6 + Math.random() * 0.9
+        this.sprintText = pad(Math.floor(this._elapsed)) + '.00'
+        this.sprintCadence = 160 + Math.floor(Math.random() * 21)
+        if (this._sprintDist >= 50) { this.finishTraining(); return }
+      }
+    } else if (this.mode === 'time') {
+      /* 800 / 1000 米 */
+      this._dist += 3.5 + Math.random() * 1.5
+      this.runKm = (this._dist / 1000).toFixed(2)
+      this.runSteps += 1 + Math.floor(Math.random() * 2)
+      this.calories = Math.round(this._elapsed * 0.24)
+      if (this._dist > 10) {
+        var paceMin = (this._elapsed / 60) / (this._dist / 1000)
+        this.runPace = Math.floor(paceMin) + "'" + pad(Math.round((paceMin - Math.floor(paceMin)) * 60)) + '"'
+      }
+      this.runZone = hr < 130 ? '燃脂区间' : (hr < 170 ? '有氧区间' : '极限区间')
+      var target = this.sportId === '1000m_run' ? 1000 : 800
+      if (this._dist >= target) { this.finishTraining(); return }
+    } else {
+      /* 立定跳远：手动测量后输入，不再自动估算 */
+      if (this.timeLeft > 0) this.timeLeft--
+    }
   },
 
   togglePause() {
@@ -152,54 +251,62 @@ export default {
     this.isFinished = true
     this.isRunning = false
     this._stopAllTimers()
+    this._stopSampling()
 
-    this.avgHeartRate = this._hrCount > 0
-      ? Math.round(this._hrSum / this._hrCount)
-      : this.heartRate
-
+    var avg = this._hrCount > 0 ? Math.round(this._hrSum / this._hrCount) : this.heartRate
     var score = this._calcScore()
-    var usedTime = this.mode === 'time' ? this.runElapsed : (this.totalTime - this.timeLeft)
 
-    var result = {
+    var value, unit2, mode2
+    if (this.mode === 'count') { value = this.countValue; unit2 = this.unit; mode2 = 'count' }
+    else if (this.sportId === '50m_run') { value = this._elapsed; unit2 = '秒'; mode2 = 'time' }
+    else if (this.mode === 'time') { value = Math.round(this._dist); unit2 = '米'; mode2 = 'distance' }
+    else { value = parseFloat(this.jumpBest) || 0; unit2 = '米'; mode2 = 'distance' }
+
+    var record = {
       sportId: this.sportId,
       sportName: this.sportName,
-      value: this.mode === 'time' ? this.runDistance : (this.countValue || usedTime),
-      unit: this.mode === 'time' ? '米' : this.unit,
-      mode: this.mode,
-      heartRate: this.avgHeartRate,
+      value: value,
+      unit: unit2,
+      mode: mode2,
+      heartRate: avg,
       maxHr: this._maxHr || 150,
       calories: this.calories || Math.round(score * 0.5),
-      duration: usedTime,
+      duration: this._elapsed,
       timestamp: new Date().toISOString(),
       score: score,
       uploaded: false
     }
+    console.log(TAG, '训练完成!', JSON.stringify(record))
 
-    console.log(TAG, '训练完成!', JSON.stringify(result))
+    storage.set({ key: 'last_result', value: JSON.stringify(record) })
+    this._appendHistory(record)
+    this._httpUpload(record)
 
-    storage.set({ key: 'last_result', value: JSON.stringify(result) })
-    this._appendHistory(result)
-    this._httpUpload(result)
-
-    setTimeout(function() {
-      router.back()
-    }, 300)
+    setTimeout(function () { router.replace({ uri: '/pages/result' }) }, 300)
   },
 
   _calcScore() {
-    /* 跑步模式：用时越短分数越高 */
+    if (this.sportId === '50m_run') {
+      var t = this._elapsed
+      if (t <= 7.5) return 100
+      if (t >= 15) return 10
+      return Math.round(100 - ((t - 7.5) / 7.5) * 90)
+    }
     if (this.mode === 'time') {
       var bestTime, worstTime
-      if (this.sportId === '50m_run')      { bestTime = 6;  worstTime = 15 }
-      else if (this.sportId === '800m_run') { bestTime = 180; worstTime = 360 }
-      else                                   { bestTime = 210; worstTime = 400 } /* 1000m */
-      var elapsed = this.runElapsed
-      if (elapsed <= bestTime) return 100
-      if (elapsed >= worstTime) return 10
-      return Math.round(100 - ((elapsed - bestTime) / (worstTime - bestTime)) * 90)
+      if (this.sportId === '800m_run') { bestTime = 180; worstTime = 360 }
+      else { bestTime = 210; worstTime = 400 }
+      var e = this._elapsed
+      if (e <= bestTime) return 100
+      if (e >= worstTime) return 10
+      return Math.round(100 - ((e - bestTime) / (worstTime - bestTime)) * 90)
     }
-
-    /* 非跑步：按数值评分 */
+    if (this.mode === 'distance') {
+      var d = parseFloat(this.jumpBest) || 0
+      if (d >= 2.4) return 98
+      if (d <= 1.6) return 40
+      return Math.round(40 + (d - 1.6) / 0.8 * 55)
+    }
     var v = this.countValue
     if (v >= 140) return 90 + Math.min(10, v - 130)
     if (v >= 110) return 80 + (v - 110)
@@ -210,11 +317,11 @@ export default {
   _appendHistory(record) {
     storage.get({
       key: 'history_records',
-      success: function(data) {
+      success: function (data) {
         var list = []
-        try { if (data) list = JSON.parse(data) } catch(e) {}
+        try { if (data) list = JSON.parse(data) } catch (e) {}
         list.unshift(record)
-        if (list.length > 20) list = list.slice(0, 20)
+        if (list.length > 40) list = list.slice(0, 40)
         storage.set({ key: 'history_records', value: JSON.stringify(list) })
       }
     })
@@ -223,17 +330,16 @@ export default {
   _httpUpload(record) {
     storage.get({
       key: 'device_id',
-      success: function(devId) {
+      success: function (devId) {
         storage.get({
           key: 'server_url',
-          success: function(serverUrl) {
+          success: function (serverUrl) {
             storage.get({
               key: 'student_id',
-              success: function(studentId) {
+              success: function (studentId) {
                 if (!serverUrl) serverUrl = 'http://101.35.231.154:9000'
                 if (!devId) devId = 'unknown'
                 if (!studentId) studentId = ''
-
                 var url = serverUrl + '/api/v1/fitness/upload/batch'
                 var rec = {
                   student_id: studentId,
@@ -246,33 +352,20 @@ export default {
                   score: record.score,
                   sport_name: record.sportName
                 }
-
-                /* 跑步：传 distance(米) + value(用时秒) */
-                if (record.mode === 'time') {
-                  rec.distance = record.value     // 跑了多少米
-                  rec.time_sec = record.duration  // 用时多少秒
-                } else {
-                  rec.count = record.value        // 做了多少次
-                }
-
+                if (record.mode === 'time') { rec.time_sec = record.value }
+                else if (record.mode === 'distance') { rec.distance = record.value }
+                else { rec.count = record.value }
                 fetch.fetch({
-                  url: url,
-                  method: 'POST',
+                  url: url, method: 'POST',
                   header: { 'Content-Type': 'application/json' },
-                  data: JSON.stringify({
-                    device_id: devId,
-                    records: [rec]
-                  }),
+                  data: JSON.stringify({ device_id: devId, records: [rec] }),
                   responseType: 'text',
-                  success: function(resp) {
+                  success: function (resp) {
                     console.log(TAG, '[HTTP] 上传成功 code:', resp.code)
                     record.httpStatus = 'success'
                     storage.set({ key: 'last_result', value: JSON.stringify(record) })
                   },
-                  fail: function(err, code) {
-                    console.error(TAG, '[HTTP] 上传失败 code:', code)
-                    record.httpStatus = 'failed'
-                  }
+                  fail: function () { console.error(TAG, '[HTTP] 上传失败') }
                 })
               }
             })
@@ -286,12 +379,6 @@ export default {
     if (this._tickTimer) { clearInterval(this._tickTimer); this._tickTimer = null }
   },
 
-  _fmtTime(sec) {
-    var m = Math.floor(sec / 60)
-    var s = sec % 60
-    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0')
-  },
-
   goBack() {
     this._stopAllTimers()
     router.back()
@@ -301,140 +388,196 @@ export default {
 
 <template>
   <div class="page">
-    <!-- ① 电池栏 -->
-    <div class="battery-bar">
-      <div class="battery-wrap">
-        <div class="batt-body"><div class="batt-fill" style="width: {{batteryPercent}}%"></div></div>
-        <text class="batt-pct">{{batteryPercent}}%</text>
-      </div>
-    </div>
+    <!-- 标题 + 右上角 -->
+    <text class="title">{{sportName}}</text>
+    <text class="corner-time" show="{{mode !== 'distance' && sportId !== '50m_run'}}">{{sessionText}}</text>
+    <text class="corner-status" show="{{sportId === '50m_run'}}">{{sprintStatus}}</text>
+    <text class="corner-jump" show="{{false}}">第{{jumpNo + 1}}跳</text>
 
-    <!-- ② 标题行 -->
-    <div class="title-row">
-      <div class="back-btn" @click="goBack"><text class="back-char">&lt;</text></div>
-      <text class="sport-name">{{sportName}}</text>
-      <text class="status-on" show="{{isRunning && !isFinished}}">训练中</text>
-      <text class="status-paused" show="{{!isRunning && !isFinished}}">暂停</text>
-      <text class="status-done" show="{{isFinished}}">结束</text>
-    </div>
-
-    <!-- ======== 跑步模式 (time) ======== -->
-    <div class="run-area" show="{{mode === 'time'}}">
-      <div class="run-dist-row">
-        <text class="run-dist">{{runDistance}}</text>
-        <text class="run-unit">米</text>
-      </div>
-      <div class="run-time-row">
-        <text class="run-time">{{_fmtTime(runElapsed)}}</text>
-      </div>
-      <div class="run-bar">
-        <div class="run-cell">
-          <text class="run-num">{{runPace}}</text>
-          <text class="run-key">配速</text>
-        </div>
-        <div class="run-div"></div>
-        <div class="run-cell">
-          <text class="run-num">{{heartRate}}</text>
-          <text class="run-key">心率</text>
-        </div>
-        <div class="run-div"></div>
-        <div class="run-cell">
-          <text class="run-num">{{calories}}kcal</text>
-          <text class="run-key">消耗</text>
-        </div>
-      </div>
-    </div>
-
-    <!-- ======== 计数/距离模式 (count/distance) ======== -->
-    <div class="count-area" show="{{mode !== 'time'}}">
-      <div class="main-num">
+    <!-- ===== 计数模式：跳绳 / 仰卧起坐 / 引体向上 ===== -->
+    <div class="area" show="{{mode === 'count'}}">
+      <div class="big-row">
         <text class="big-num">{{countValue}}</text>
         <text class="big-unit">{{unit}}</text>
       </div>
-      <div class="timer-bar" show="{{mode === 'count'}}">
-        <text class="timer-val">{{_fmtTime(timeLeft)}}</text>
-      </div>
-      <div class="bottom-bar">
-        <div class="bar-cell">
-          <text class="bar-num">{{heartRate}}</text>
-          <text class="bar-key">心率</text>
+      <text class="sub-label">当前次数</text>
+      <text class="set-line" show="{{setLine !== ''}}">{{setLine}}</text>
+      <div class="side-row">
+        <div class="side-cell">
+          <div class="side-numrow">
+            <image class="side-ic" src="/common/assets/ic_heart.png"></image>
+            <text class="side-num" style="color: #FF3B45">{{heartRate}}</text>
+          </div>
+          <text class="side-key">心率</text>
         </div>
-        <div class="bar-div"></div>
-        <div class="bar-cell">
-          <text class="bar-num">{{calories}}kcal</text>
-          <text class="bar-key">消耗</text>
+        <div class="side-gap"></div>
+        <div class="side-cell">
+          <div class="side-numrow">
+            <image class="side-ic" src="/common/assets/ic_strength.png" show="{{sportId === 'pull_up'}}"></image>
+            <image class="side-ic" src="/common/assets/ic_stopwatch.png" show="{{sportId !== 'pull_up'}}"></image>
+            <text class="side-num">{{rightNum}}</text>
+          </div>
+          <text class="side-key">{{rightKey}}</text>
+        </div>
+      </div>
+      <text class="tip" show="{{tipText !== ''}}">{{tipText}}</text>
+    </div>
+
+    <!-- ===== 跑步模式：800 / 1000 米 ===== -->
+    <div class="area" show="{{mode === 'time' && sportId !== '50m_run'}}">
+      <div class="big-row">
+        <text class="big-num">{{runKm}}</text>
+        <text class="big-unit">公里</text>
+      </div>
+      <text class="sub-label">已跑距离</text>
+      <div class="side-row">
+        <div class="side-cell">
+          <div class="side-numrow">
+            <image class="side-ic" src="/common/assets/ic_stopwatch.png"></image>
+            <text class="side-num">{{runPace}}</text>
+          </div>
+          <text class="side-key">配速</text>
+        </div>
+        <div class="side-gap"></div>
+        <div class="side-cell">
+          <div class="side-numrow">
+            <image class="side-ic" src="/common/assets/ic_heart.png"></image>
+            <text class="side-num" style="color: #FF3B45">{{heartRate}}</text>
+          </div>
+          <text class="side-key">心率</text>
+        </div>
+      </div>
+      <div class="run-extra">
+        <text class="extra-txt">{{runSteps}}步</text>
+        <text class="extra-txt">{{calories}}千卡</text>
+        <text class="extra-zone">{{runZone}}</text>
+      </div>
+    </div>
+
+    <!-- ===== 冲刺模式：50 米 ===== -->
+    <div class="area" show="{{sportId === '50m_run'}}">
+      <div class="big-row">
+        <text class="big-num">{{sprintText}}</text>
+        <text class="big-unit">秒</text>
+      </div>
+      <text class="sub-label">冲刺计时</text>
+      <div class="side-row">
+        <div class="side-cell">
+          <div class="side-numrow">
+            <image class="side-ic" src="/common/assets/ic_heart.png"></image>
+            <text class="side-num" style="color: #FF3B45">{{heartRate}}</text>
+          </div>
+          <text class="side-key">心率</text>
+        </div>
+        <div class="side-gap"></div>
+        <div class="side-cell">
+          <div class="side-numrow">
+            <image class="side-ic" src="/common/assets/ic_run.png"></image>
+            <text class="side-num">{{sprintCadence}}</text>
+          </div>
+          <text class="side-key">步/分</text>
+        </div>
+      </div>
+      <text class="tip">{{sprintStatus}}</text>
+    </div>
+
+    <!-- ===== 跳远模式：立定跳远（手动输入成绩） ===== -->
+    <div class="area" show="{{mode === 'distance'}}">
+      <div show="{{!jumpSubmitted}}">
+        <text class="tip-lg">请完成立定跳远并测量</text>
+        <text class="sub-label">输入成绩（米，如 2.35）</text>
+        <input class="jump-input" type="number" placeholder="2.35" value="{{jumpInput}}" @change="_onJumpInput" @input="_onJumpInput"></input>
+        <div class="btn-submit" @click="_submitJump"><text class="btn-submit-txt">确认成绩</text></div>
+        <text class="tip" show="{{tipText !== ''}}">{{tipText}}</text>
+      </div>
+      <div show="{{jumpSubmitted}}">
+        <div class="big-row">
+          <text class="big-num">{{jumpBest}}</text>
+          <text class="big-unit">米</text>
+        </div>
+        <text class="gold-label">最终成绩</text>
+        <div class="side-row">
+          <div class="side-cell">
+            <div class="side-numrow">
+              <image class="side-ic" src="/common/assets/ic_heart.png"></image>
+              <text class="side-num" style="color: #FF3B45">{{heartRate}}</text>
+            </div>
+            <text class="side-key">心率</text>
+          </div>
+          <div class="side-gap"></div>
+          <div class="side-cell">
+            <div class="side-numrow">
+              <image class="side-ic" src="/common/assets/ic_stopwatch.png"></image>
+              <text class="side-num">{{rightNum}}</text>
+            </div>
+            <text class="side-key">{{rightKey}}</text>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- ④ 按钮组 -->
-    <div class="btn-group" show="{{!isFinished}}">
+    <!-- 底部按钮 -->
+    <div class="btn-row" show="{{!isFinished && mode !== 'distance'}}">
       <div class="btn-pause" @click="togglePause">
-        <text class="btn-icon">{{isRunning ? '||' : '▶'}}</text>
+        <image class="ic-btn" src="/common/assets/ic_pause.png" show="{{isRunning}}"></image>
+        <image class="ic-btn" src="/common/assets/ic_play.png" show="{{!isRunning}}"></image>
       </div>
-      <div class="btn-finish" @click="finishTraining">
-        <text class="btn-icon-f">■</text>
+      <div class="btn-stop" @click="finishTraining">
+        <div class="stop-square"></div>
       </div>
     </div>
-
-    <div class="done-row" show="{{isFinished}}">
-      <text class="done-txt">正在上传数据...</text>
-    </div>
+    <text class="done-tip" show="{{isFinished}}">正在保存...</text>
   </div>
 </template>
 
 <style>
-  .page { width: 466px; height: 466px; background-color: #000000; }
+  .page { width: 480px; height: 480px; background-color: #000000; }
 
-  /* ① 电池栏 */
-  .battery-bar { position: absolute; top: 8px; left: 63px; width: 340px; height: 18px; flex-direction: row; align-items: center; justify-content: center; }
-  .battery-wrap { width: 44px; height: 16px; flex-direction: row; align-items: center; }
-  .batt-body { width: 18px; height: 9px; border-radius: 2px; background-color: #222222; border-width: 1px; border-color: #555555; }
-  .batt-fill { height: 7px; min-width: 2px; border-radius: 1px; background-color: #00C9A7; }
-  .batt-pct { font-size: 10px; color: #cccccc; margin-left: 3px; }
+  /* 标题 + 右上 */
+  .title { position: absolute; left: 0; top: 26px; width: 480px; text-align: center; font-size: 28px; color: #ffffff; }
+  .corner-time { position: absolute; right: 44px; top: 72px; font-size: 20px; color: #8E8E93; }
+  .corner-status { position: absolute; right: 44px; top: 72px; font-size: 20px; color: #2DD4BF; }
+  .corner-jump { position: absolute; right: 44px; top: 72px; font-size: 20px; color: #8E8E93; }
 
-  /* ② 标题行 */
-  .title-row { position: absolute; top: 32px; left: 63px; width: 340px; height: 24px; flex-direction: row; align-items: center; }
-  .back-btn { width: 22px; height: 22px; border-radius: 11px; background-color: #1a1a1a; justify-content: center; align-items: center; }
-  .back-char { font-size: 11px; color: #888888; }
-  .sport-name { flex: 1; text-align: center; font-size: 14px; color: #FF6B35; }
-  .status-on { font-size: 11px; color: #00C9A7; width: 44px; text-align: right; }
-  .status-paused { font-size: 11px; color: #FFB800; width: 44px; text-align: right; }
-  .status-done { font-size: 11px; color: #888888; width: 44px; text-align: right; }
+  /* 主区域 */
+  .area { position: absolute; left: 0; top: 108px; width: 480px; flex-direction: column; align-items: center; }
+  .big-row { flex-direction: row; align-items: flex-start; }
+  .big-num { font-size: 96px; color: #ffffff; font-weight: 300; line-height: 104px; }
+  .big-unit { font-size: 28px; color: #2DD4BF; margin-left: 8px; margin-top: 14px; }
+  .sub-label { font-size: 18px; color: #8E8E93; margin-top: 2px; }
+  .set-line { font-size: 20px; color: #2DD4BF; margin-top: 6px; }
 
-  /* ======== 跑步模式 ======== */
-  .run-area { position: absolute; top: 66px; left: 33px; width: 400px; flex-direction: column; align-items: center; }
-  .run-dist-row { flex-direction: row; align-items: baseline; }
-  .run-dist { font-size: 52px; color: #ffffff; letter-spacing: 2px; }
-  .run-unit { font-size: 16px; color: #888888; margin-left: 4px; }
-  .run-time-row { flex-direction: row; align-items: center; margin-top: 2px; }
-  .run-time { font-size: 22px; color: #FF6B35; }
-  .run-bar { width: 350px; height: 48px; flex-direction: row; align-items: center; justify-content: space-around; margin-top: 8px; border-radius: 14px; background-color: #111111; }
-  .run-cell { flex-direction: column; align-items: center; }
-  .run-num { font-size: 18px; color: #ffffff; }
-  .run-key { font-size: 11px; color: #888888; margin-top: 1px; }
-  .run-div { width: 1px; height: 26px; background-color: #222222; }
+  .side-row { width: 440px; flex-direction: row; justify-content: space-between; margin-top: 18px; padding: 0 26px; }
+  .side-cell { flex-direction: column; align-items: center; width: 160px; }
+  .side-num { font-size: 30px; color: #ffffff; }
+  .side-numrow { flex-direction: row; align-items: center; }
+  .side-ic { width: 28px; height: 28px; margin-right: 8px; }
+  .side-key { font-size: 17px; color: #8E8E93; margin-top: 4px; }
+  .side-gap { width: 40px; }
 
-  /* ======== 计数模式 ======== */
-  .count-area { position: absolute; top: 66px; left: 33px; width: 400px; flex-direction: column; align-items: center; }
-  .main-num { flex-direction: row; align-items: baseline; }
-  .big-num { font-size: 48px; color: #ffffff; letter-spacing: 2px; }
-  .big-unit { font-size: 16px; color: #888888; margin-left: 4px; }
-  .timer-bar { flex-direction: row; align-items: center; margin-top: 2px; }
-  .timer-val { font-size: 22px; color: #FF6B35; }
-  .bottom-bar { width: 350px; height: 48px; flex-direction: row; align-items: center; justify-content: space-around; margin-top: 8px; border-radius: 14px; background-color: #111111; }
-  .bar-cell { flex-direction: column; align-items: center; }
-  .bar-num { font-size: 18px; color: #ffffff; }
-  .bar-key { font-size: 11px; color: #888888; margin-top: 1px; }
-  .bar-div { width: 1px; height: 26px; background-color: #222222; }
+  .gold-label { font-size: 22px; color: #FFD54A; margin-top: 6px; }
 
-  /* ④ 按钮组 */
-  .btn-group { position: absolute; top: 262px; left: 143px; width: 180px; height: 52px; flex-direction: row; justify-content: space-around; align-items: center; }
-  .btn-pause { width: 48px; height: 48px; border-radius: 24px; background-color: #FF6B35; justify-content: center; align-items: center; }
-  .btn-icon { font-size: 18px; color: #ffffff; }
-  .btn-finish { width: 48px; height: 48px; border-radius: 24px; background-color: #333333; justify-content: center; align-items: center; border-width: 2px; border-color: #F85149; }
-  .btn-icon-f { font-size: 13px; color: #F85149; }
+  .run-extra { flex-direction: row; margin-top: 16px; }
+  .extra-txt { font-size: 20px; color: #ffffff; margin: 0 14px; }
+  .extra-zone { font-size: 20px; color: #2DD4BF; margin-left: 14px; }
 
-  .done-row { position: absolute; top: 270px; left: 173px; }
-  .done-txt { font-size: 12px; color: #00C9A7; }
+  .badge-pill { margin-top: 12px; padding: 6px 20px; border-radius: 18px; background-color: #123B36; }
+  .badge-txt { font-size: 19px; color: #2DD4BF; }
+
+  .tip { font-size: 20px; color: #2DD4BF; margin-top: 12px; }
+
+  /* 底部按钮 */
+  .btn-row { position: absolute; left: 0; top: 396px; width: 480px; flex-direction: row; justify-content: center; }
+  .btn-pause { width: 64px; height: 64px; border-radius: 32px; background-color: #2C2C30; justify-content: center; align-items: center; margin: 0 26px; }
+  .ic-btn { width: 26px; height: 26px; }
+  .btn-stop { width: 64px; height: 64px; border-radius: 32px; background-color: #2DD4BF; justify-content: center; align-items: center; margin: 0 26px; }
+  .stop-square { width: 24px; height: 24px; border-radius: 5px; border-width: 3px; border-color: #ffffff; }
+
+  .done-tip { position: absolute; left: 0; top: 416px; width: 480px; text-align: center; font-size: 18px; color: #2DD4BF; }
+
+  /* 立定跳远：手动输入成绩 */
+  .tip-lg { font-size: 24px; color: #ffffff; margin-top: 4px; text-align: center; }
+  .jump-input { width: 220px; height: 64px; border-radius: 12px; background-color: #1C1C1E; color: #ffffff; font-size: 34px; text-align: center; margin-top: 20px; padding: 0 12px; }
+  .btn-submit { width: 220px; height: 60px; border-radius: 30px; background-color: #2DD4BF; justify-content: center; align-items: center; margin-top: 22px; }
+  .btn-submit-txt { font-size: 24px; color: #ffffff; }
 </style>

@@ -1,0 +1,128 @@
+<script>
+  /**
+   * Xsport Badges — 勋章成就（原型 #8）
+   * 480×480：🏆 Lv.5 进度条 + 距下一级所需分数 + 我的勋章 3×3 网格
+   */
+  var storage = require('@system.storage')
+  var router = require('@system.router')
+
+  var TAG = '[Badges]'
+
+  var A = '/common/assets/'
+  var CELLS = [
+    { icon: A + 'badge_rope.png' },
+    { icon: A + 'badge_runner.png' },
+    { icon: A + 'badge_heart.png' },
+    { seven: true },
+    { icon: A + 'badge_star.png' },
+    { icon: A + 'badge_lock.png' },
+    { icon: A + 'badge_lock.png' },
+    { icon: A + 'badge_flame.png' },
+    { icon: A + 'badge_lock.png' }
+  ]
+
+  export default {
+    data: {
+      level: 5,
+      progressPct: 65,
+      needText: '距Lv.6还需320分',
+      cells: []
+    },
+
+    onInit() {
+      this._load()
+      this._buildCells()
+    },
+
+    _load() {
+      var self = this
+      storage.get({
+        key: 'history_records',
+        success: function (data) {
+          var list = []
+          try { if (data) list = JSON.parse(data) } catch (e) {}
+          var sum = 0
+          for (var i = 0; i < list.length; i++) sum += (list[i].score || 0)
+          var avg = list.length > 0 ? Math.round(sum / list.length) : 60
+
+          self.level = Math.min(5, Math.floor(avg / 20) + 1)
+          self.progressPct = Math.min(95, Math.round(avg * 0.75))
+          self.needText = '距Lv.' + (self.level + 1) + '还需' + Math.max(0, Math.round((100 - avg) * 23)) + '分'
+        }
+      })
+    },
+
+    _buildCells() {
+      var arr = []
+      for (var i = 0; i < CELLS.length; i++) {
+        arr.push({ icon: CELLS[i].icon || '', isText: !!CELLS[i].seven })
+      }
+      this.cells = arr
+    },
+
+    goBack() { router.back() }
+  }
+</script>
+
+<template>
+  <div class="page">
+    <text class="title">勋章成就</text>
+
+    <!-- 等级卡 -->
+    <div class="level-card">
+      <div class="level-row">
+        <image class="cup" src="/common/assets/ic_trophy.png"></image>
+        <text class="lv">Lv.{{level}}</text>
+        <div class="bar">
+          <div class="bar-fill" style="width: {{progressPct}}%"></div>
+        </div>
+      </div>
+      <text class="need">{{needText}}</text>
+    </div>
+
+    <!-- 勋章网格 -->
+    <div class="grid-card">
+      <div class="grid">
+        <div class="gcell" for="{{cells}}">
+          <image class="g-icon" src="{{$item.icon}}" show="{{!$item.isText}}"></image>
+          <div class="g-text-circle" show="{{$item.isText}}">
+            <text class="g-text">7天</text>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <image class="back" src="/common/assets/ic_back.png" @click="goBack"></image>
+  </div>
+</template>
+
+<style>
+  .page { width: 480px; height: 480px; background-color: #000000; flex-direction: column; align-items: center; }
+
+  .title { font-size: 28px; color: #ffffff; margin-top: 24px; }
+
+  /* 等级卡 */
+  .level-card {
+    width: 380px; margin-top: 16px; padding: 12px 16px 14px;
+    border-radius: 16px; background-color: #1C1C1E;
+  }
+  .level-row { flex-direction: row; align-items: center; }
+  .cup { width: 28px; height: 28px; margin-right: 10px; }
+  .lv { font-size: 24px; color: #ffffff; margin-right: 14px; }
+  .bar { flex: 1; height: 10px; border-radius: 5px; background-color: #3A3A3E; }
+  .bar-fill { height: 10px; border-radius: 5px; background-color: #2DD4BF; }
+  .need { font-size: 16px; color: #8E8E93; text-align: center; margin-top: 8px; }
+
+  /* 勋章网格 */
+  .grid-card {
+    width: 380px; margin-top: 12px; padding: 12px 16px;
+    border-radius: 16px; background-color: #1C1C1E;
+  }
+  .grid { width: 348px; flex-direction: row; flex-wrap: wrap; }
+  .gcell { width: 116px; height: 78px; flex-direction: column; align-items: center; justify-content: center; }
+  .g-icon { width: 58px; height: 58px; }
+  .g-text-circle { width: 44px; height: 44px; border-radius: 22px; background-color: #2DD4BF; justify-content: center; align-items: center; }
+  .g-text { font-size: 15px; color: #ffffff; }
+
+  .back { width: 32px; height: 32px; margin-top: 4px; }
+</style>

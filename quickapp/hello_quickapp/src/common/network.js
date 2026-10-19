@@ -280,3 +280,21 @@ export function getWatchLatestReport(studentId) {
   debug('getWatchLatestReport, studentId =', studentId)
   return request(`/ai/watch/report/latest?student_id=${encodeURIComponent(studentId)}`)
 }
+
+/**
+ * 手表端触发月度体测分析（免认证）：上传/聚合当月数据并调用 AI 生成报告
+ * @param {string} studentId - 学号
+ * @param {number} year - 年（默认当前年）
+ * @param {number} month - 月（默认当前月）
+ * @returns {Promise<object>} { has_report, id, summary, detail_text, month, created_at, message }
+ */
+export function triggerWatchAnalysis(studentId, year, month) {
+  const now = new Date()
+  const y = year || now.getFullYear()
+  const m = month || (now.getMonth() + 1)
+  debug('triggerWatchAnalysis, studentId =', studentId, 'year =', y, 'month =', m)
+  return request('/ai/watch/analyze', {
+    method: 'POST',
+    body: { student_id: studentId, year: y, month: m }
+  })
+}
