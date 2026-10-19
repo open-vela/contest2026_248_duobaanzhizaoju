@@ -1,0 +1,183 @@
+<script>
+/**
+ * Xsport 体测分析 — AI 月度分析（运动页新增项）
+ * 480×480 圆屏：当前月份 + 立即分析（手动）+ 自动按月触发 + 结果展示
+ *
+ * 流程：训练时体测结果已上传服务器；本页将本月数据交由服务器接入 AI 模型分析，
+ *       结果（摘要 + 详情）返回手表端。两种方式触发：
+ *       1) 手动：点击“立即分析（AI）”
+ *       2) 自动：每月首次打开本页，若本月已有体测数据则自动触发一次
+ */
+import { triggerWatchAnalysis } from '../../common/network'
+var storage = require('@system.storage')
+var router = require('@system.router')
+
+var TAG = '[Analysis]'
+
+export default {
+  data: {
+    studentId: '',
+    monthLabel: '—',
+    year: 0,
+    month: 0,
+    curYm: '',
+    analyzing: false,
+    hasResult: false,
+    result: null,
+    autoNote: '',
+    errMsg: ''
+  },
+
+  onInit() {
+    this._setMonth()
+    var self = this
+    storage.get({
+      key: 'student_id',
+      success: function (d) { self.studentId = d || ''; self._tryAutoAnalyze() },
+      fail: function () { self._tryAutoAnalyze() }
+    })
+  },
+
+  _setMonth() {
+    var d = new Date()
+    this.year = d.getFullYear()
+    this.month = d.getMonth() + 1
+    this.monthLabel = this.year + '年' + this.month + '月'
+    this.curYm = this.year + '-' + (this.month < 10 ? '0' + this.month : this.month)
+  },
+
+  /* 自动按月：本月未分析且已有体测记录则自动触发一次 */
+  _tryAutoAnalyze() {
+    var self = this
+    storage.get({
+      key: 'last_analysis_month',
+      success: function (saved) {
+        if (saved === self.curYm) {
+          self._loadCached()
+          self.autoNote = '本月分析已完成（' + self.curYm + '）'
+          return
+        }
+        storage.get({
+          key: 'history_records',
+          success: function (h) {
+            var has = false
+            try { has = h && JSON.parse(h).length > 0 } catch (e) {}
+            if (!has) {
+              self.autoNote = '本月尚无体测记录，完成体测后将自动分析'
+              return
+            }
+            self.autoNote = '检测到新月份，已自动生成本月分析'
+            self._runAnalyze(false)
+          }
+        })
+      }
+    })
+  },
+
+  _loadCached() {
+    var self = this
+    storage.get({
+      key: 'last_analysis_result',
+      success: function (data) {
+        if (!data) return
+        try {
+          var r = JSON.parse(data)
+          self.result = r
+          self.hasResult = true
+        } catch (e) {}
+      }
+    })
+  },
+
+  onAnalyze() { this._runAnalyze(true) },
+
+  _runAnalyze(manual) {
+    if (!this.studentId) { this.errMsg = '未绑定学号，无法分析'; return }
+    if (this.analyzing) return
+    this.analyzing = true
+    this.errMsg = ''
+    var self = this
+    triggerWatchAnalysis(this.studentId, this.year, this.month).then(function (resp) {
+      self.analyzing = false
+      if (resp && resp.has_report) {
+        self.result = {
+          summary: resp.summary || '',
+          detail: resp.detail_text || '',
+          month: resp.month || self.curYm,
+          createdAt: resp.created_at || '',
+          provider: resp.provider || '',
+          model: resp.model_name || ''
+        }
+        self.hasResult = true
+        self._saveResult(resp)
+        if (manual) self.autoNote = '已手动生成本月分析'
+      } else {
+        self.hasResult = false
+        self.result = null
+        self.errMsg = (resp && resp.message) || '暂无分析结果'
+      }
+    }).catch(function (e) {
+      self.analyzing = false
+      self.hasResult = false
+      self.errMsg = '分析失败：' + (e && e.message ? e.message : e)
+    })
+  },
+
+  _saveResult(resp) {
+    storage.set({ key: 'last_analysis_month', value: this.curYm })
+    storage.set({ key: 'last_analysis_result', value: JSON.stringify(this.result) })
+  },
+
+  onBack() { router.back() }
+}
+</script>
+
+<template>
+  <div class="page">
+    <text class="title">体测分析</text>
+    <image class="back" src="/common/assets/ic_back.png" @click="onBack"></image>
+
+    <text class="month">{{monthLabel}}</text>
+
+    <div class="card">
+      <text class="auto-note">{{autoNote}}</text>
+      <div class="btn-analyze" @click="onAnalyze" show="{{!analyzing}}">
+        <text class="btn-txt">立即分析（AI）</text>
+      </div>
+      <text class="loading" show="{{analyzing}}">分析中…</text>
+      <text class="err" show="{{errMsg}}">{{errMsg}}</text>
+    </div>
+
+    <div class="result" show="{{hasResult}}">
+      <text class="res-summary">{{result.summary}}</text>
+      <text class="res-detail">{{result.detail}}</text>
+      <text class="res-meta">{{result.month}} · {{result.createdAt}}</text>
+      <text class="res-meta2" show="{{result.provider}}">模型：{{result.provider}} / {{result.model}}</text>
+    </div>
+
+    <text class="hint">分析基于本月已上传的体测数据；每月首次打开自动分析，也可手动触发。</text>
+  </div>
+</template>
+
+<style>
+  .page { width: 480px; height: 480px; background-color: #000000; flex-direction: column; align-items: center; }
+  .title { font-size: 30px; color: #ffffff; margin-top: 22px; }
+  .back { position: absolute; left: 36px; top: 28px; width: 36px; height: 36px; }
+
+  .month { font-size: 22px; color: #2DD4BF; margin-top: 10px; }
+
+  .card { width: 420px; flex-direction: column; align-items: center; margin-top: 18px; }
+  .auto-note { font-size: 18px; color: #9A9AA0; text-align: center; margin-bottom: 14px; }
+  .btn-analyze { width: 280px; height: 60px; border-radius: 30px; background-color: #2DD4BF; justify-content: center; align-items: center; }
+  .btn-txt { font-size: 24px; color: #ffffff; }
+  .loading { font-size: 22px; color: #2DD4BF; margin-top: 18px; }
+  .err { font-size: 18px; color: #FF3B30; margin-top: 14px; text-align: center; }
+
+  .result { width: 420px; flex-direction: column; align-items: center; margin-top: 16px; padding: 14px; border-radius: 18px; background-color: #1C1C1E; }
+  .res-summary { font-size: 22px; color: #FFD54A; text-align: center; }
+  .res-detail { font-size: 18px; color: #ffffff; margin-top: 10px; line-height: 28px; }
+  .res-meta { font-size: 16px; color: #9A9AA0; margin-top: 10px; }
+  .res-meta2 { font-size: 16px; color: #9A9AA0; margin-top: 4px; }
+
+  .hint { position: absolute; left: 0; bottom: 18px; width: 480px; text-align: center; font-size: 15px; color: #5A5A60; padding: 0 30px; }
+</style>

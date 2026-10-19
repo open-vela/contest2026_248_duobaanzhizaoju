@@ -32,6 +32,9 @@
     },
     {
       "name": "system.vibrator"
+    },
+    {
+      "name": "system.sensor"
     }
   ],
   "permissions": [
@@ -98,6 +101,12 @@
       },
       "pages/report_detail": {
         "component": "report_detail"
+      },
+      "pages/badges": {
+        "component": "badges"
+      },
+      "pages/analysis": {
+        "component": "analysis"
       }
     }
   }

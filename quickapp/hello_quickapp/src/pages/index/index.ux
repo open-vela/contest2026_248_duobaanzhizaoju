@@ -153,15 +153,15 @@
 
 <style>
   .page {
-    width: 466px;
-    height: 466px;
+    width: 480px;
+    height: 480px;
     background-color: #000000;
     flex-direction: column;
   }
 
   .container {
-    width: 466px;
-    height: 466px;
+    width: 480px;
+    height: 480px;
     flex-direction: column;
     align-items: center;
     justify-content: center;

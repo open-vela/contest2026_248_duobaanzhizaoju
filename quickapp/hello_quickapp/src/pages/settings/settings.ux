@@ -180,10 +180,10 @@
 </template>
 
 <style>
-  .page { width: 466px; height: 466px; flex-direction: column; background-color: #000000; align-items: center; }
+  .page { width: 480px; height: 480px; flex-direction: column; background-color: #000000; align-items: center; }
 
   /* --- 状态栏 --- */
-  .status-bar { width: 466px; height: 36px; flex-direction: row; align-items: center; padding-left: 20px; padding-right: 20px; padding-top: 10px; }
+  .status-bar { width: 480px; height: 36px; flex-direction: row; align-items: center; padding-left: 20px; padding-right: 20px; padding-top: 10px; }
   .battery-wrap { width: 64px; height: 24px; flex-direction: row; align-items: center; }
   .batt-body { width: 22px; height: 12px; border-radius: 2px; background-color: #222222; border-width: 1px; border-color: #555555; justify-content: flex-start; }
   .batt-fill { height: 10px; min-width: 2px; border-radius: 1px; background-color: #00C9A7; }
@@ -192,7 +192,7 @@
   .time-txt { width: 200px; text-align: center; font-size: 16px; color: #ffffff; }
   .spacer { width: 60px; font-size: 11px; color: transparent; }
 
-  .back-wrap { width: 466px; padding-left: 18px; padding-top: 4px; }
+  .back-wrap { width: 480px; padding-left: 18px; padding-top: 4px; }
   .back-btn { width: 38px; height: 38px; border-radius: 19px; background-color: #1a1a1a; justify-content: center; align-items: center; }
   .back-char { font-size: 18px; color: #888888; }
 
